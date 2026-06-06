@@ -1,0 +1,59 @@
+Download tessdate language data files
+
+🇬🇧 English Guide
+
+Prerequisites
+
+· GitHub Repository: All language data files are provided in the official tesseract-ocr/tessdata repository.
+· File Format: The language files are .traineddata files. Example: eng.traineddata for English.
+
+Step 1: Open the repository and choose your model
+
+1. Open your web browser.
+2. Go to: https://github.com/tesseract-ocr/tessdata
+3. You'll see a list of all available language files. Alternatively, there are optimized versions:
+   · tessdata_fast (faster): https://github.com/tesseract-ocr/tessdata_fast
+   · tessdata_best (more accurate): https://github.com/tesseract-ocr/tessdata_best
+   · Note: Choose the variant that best suits your system. tessdata_fast is often recommended as it contains the fastest integer models for Tesseract 4+.
+
+Step 2: Download the files
+
+📦 Option A: Download a single language file
+
+1. Find the language you need in the list (e.g., eng.traineddata for English, deu.traineddata for German).
+2. Click on the file to open it.
+3. On the next page, you'll find a "Download" button. Click it to download the file.
+4. Save the file to a folder of your choice (e.g., Downloads).
+
+📦 Option B: Download all language files (Complete Archive)
+
+1. On the GitHub repository page, click the green "<> Code" button.
+2. In the dropdown menu, select "Download ZIP".
+3. The entire repository will be downloaded as a ZIP file.
+4. Tip for a custom folder: In most browsers, you can select a destination folder before confirming the download.
+5. After the download, unzip the file. Inside, you'll find all .traineddata files.
+
+💡 Alternative: Manual download using wget (for advanced users)
+
+You can also download the raw file directly from GitHub using wget. This is especially useful for scripts or servers:
+
+All languages at once (example for English and German):
+
+```bash
+wget -P /path/to/your/folder https://github.com/tesseract-ocr/tessdata/raw/main/eng.traineddata
+wget -P /path/to/your/folder https://github.com/tesseract-ocr/tessdata/raw/main/deu.traineddata
+```
+
+Explanation:
+
+· -P: Specifies the destination directory (replace /path/to/your/folder with your desired path, e.g., ~/Downloads).
+· The URL is constructed as: https://github.com/tesseract-ocr/tessdata/raw/main/ + the filename (e.g., eng.traineddata).
+
+Step 3: Using the files with Tesseract
+
+After downloading, you can use the language file:
+
+· Either place it in the default tessdata directory of your Tesseract installation.
+· Or use it from its current location:
+  · Command line: Use the --tessdata-dir parameter to specify the path to your folder.
+  · Programming interface (e.g., Python/Pytesseract): Many libraries allow you to set the datapath or the TESSDATA_PREFIX environment variable.

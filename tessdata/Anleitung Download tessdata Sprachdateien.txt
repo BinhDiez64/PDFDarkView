@@ -1,0 +1,60 @@
+
+🇩🇪 Deutsche Anleitung Download tessdata Sprachdateien
+
+Voraussetzungen
+
+· GitHub-Repository: Alle Sprachdateien werden im offiziellen GitHub-Repository tesseract-ocr/tessdata bereitgestellt.
+· Dateiformat: Die Sprachdateien sind .traineddata-Dateien. Zum Beispiel: deu.traineddata für Deutsch.
+
+Schritt 1: Repository öffnen und Modell auswählen
+
+1. Öffne deinen Webbrowser.
+2. Gehe zu: https://github.com/tesseract-ocr/tessdata
+3. Du siehst eine Liste aller verfügbaren Sprachdateien. Alternativ gibt es auch optimierte Versionen:
+   · tessdata_fast (schneller): https://github.com/tesseract-ocr/tessdata_fast
+   · tessdata_best (genauer): https://github.com/tesseract-ocr/tessdata_best
+   · Hinweis: Wähle die Variante, die am besten zu deinem System passt. tessdata_fast wird oft empfohlen, da sie die schnellsten Integer-Modelle für Tesseract 4+ enthält.
+
+Schritt 2: Dateien herunterladen
+
+📦 Option A: Einzelne Sprachdatei herunterladen
+
+1. Suche in der Liste nach der gewünschten Sprache (z.B. deu.traineddata für Deutsch, fra.traineddata für Französisch).
+2. Klicke auf die Datei, um sie zu öffnen.
+3. Auf der nächsten Seite findest du einen „Download“-Button. Klicke darauf, um die Datei herunterzuladen.
+4. Speichere die Datei in einem Ordner deiner Wahl (z.B. Downloads).
+
+📦 Option B: Alle Sprachdateien (komplettes Archiv) herunterladen
+
+1. Klicke auf dem GitHub-Repository auf den grünen „<> Code“-Button.
+2. Wähle im Dropdown-Menü „Download ZIP“.
+3. Das gesamte Repository wird als ZIP-Datei heruntergeladen.
+4. Tipp für den benutzerdefinierten Ordner: In den meisten Browsern kannst du vor dem Bestätigen des Downloads einen Zielordner auswählen.
+5. Nach dem Download entpackst du die ZIP-Datei. Darin findest du alle .traineddata-Dateien.
+
+💡 Alternative: Manuelles Herunterladen über wget (für Fortgeschrittene)
+
+Du kannst auch direkt die Rohdatei von GitHub mit wget herunterladen. Das ist besonders nützlich für Skripte oder Server:
+
+Alle Sprachen auf einmal (Beispiel für Deutsch und Französisch):
+
+```bash
+wget -P /Pfad/deinem/ordner https://github.com/tesseract-ocr/tessdata/raw/main/deu.traineddata
+wget -P /Pfad/deinem/ordner https://github.com/tesseract-ocr/tessdata/raw/main/fra.traineddata
+```
+
+Erklärung:
+
+· -P: Gibt das Zielverzeichnis an (ersetze /Pfad/deinem/ordner mit deinem Wunschpfad, z.B. ~/Downloads).
+· Die URL setzt sich zusammen aus: https://github.com/tesseract-ocr/tessdata/raw/main/ + dem Dateinamen (z.B. deu.traineddata).
+
+Schritt 3: Verwendung in Tesseract
+
+Nach dem Herunterladen kannst du die Sprachdatei nutzen:
+
+· Entweder lege sie in das Standard-tessdata-Verzeichnis deiner Tesseract-Installation.
+· Oder du verwendest sie von ihrem aktuellen Speicherort aus:
+  · Kommandozeile: Verwende den Parameter --tessdata-dir, um den Pfad zu deinem Ordner anzugeben.
+  · Programmierschnittstelle (z.B. Python/Pytesseract): Viele Bibliotheken erlauben das Setzen des datapath oder TESSDATA_PREFIX-Umgebungsvariablen.
+
+---
