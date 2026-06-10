@@ -390,47 +390,84 @@ class Config:
 
     @classmethod
     def _ensure_user_data(cls):
-        """Kopiert beim ersten Start die Default-Daten aus dem Bundle ins Benutzerverzeichnis."""
+        """
+        Kopiert die Default-Daten aus dem Bundle ins Benutzerverzeichnis.
+
+        Verhalten:
+        - translations/ und tessdata/ werden bei jedem Start vollständig synchronisiert
+        (vorhandene Dateien werden überschrieben) – das stellt sicher, dass neue
+        Übersetzungen (z. B. translations_xy.py) oder aktualisierte Sprachdaten
+        aus der neuen Version immer im Userverzeichnis landen.
+
+        - Alle anderen Ordner (z. B. Daten/, Signatures/) werden NUR beim ersten Start
+        befüllt. Existieren sie bereits, werden sie nicht angerührt – so bleiben
+        benutzereigene Einstellungen, Passwörter, Signaturen usw. erhalten.
+
+        - Bei neuen Dateien/Ordnern, die in einer späteren Version im default_data
+        hinzukommen, verhalten sie sich wie "Daten" (kein Überschreiben), es sei denn,
+        man nimmt sie explizit in die ALWAYS_UPDATE-Menge auf.
+        """
         if not getattr(sys, 'frozen', False):
-            return
+            return  # Nur im gebündelten (PyInstaller) Modus aktiv
 
         user_base = cls.get_user_data_dir()
         if not user_base:
             return
 
-        # Prüfen, ob die wichtigsten Ordner existieren
-        needed = ['Daten', 'Signatures', 'tessdata', 'translations']
-        missing = [d for d in needed if not os.path.exists(os.path.join(user_base, d))]
-
-        if not missing:
-            # Alles da – nichts tun (auch wenn Marker fehlt)
-            return
-
-        print("DEBUG: _ensure_user_data wird ausgeführt – kopiere Default-Daten")
-
         src_base = os.path.join(sys._MEIPASS, 'default_data')
         if not os.path.exists(src_base):
-            print("⚠️ Kein 'default_data' Ordner im Bundle gefunden – überspringe Kopie.")
+            print("⚠️ Kein 'default_data' Ordner im Bundle – überspringe Kopie.")
             return
+
+        # Diese Ordner werden immer komplett aktualisiert (Dateien überschrieben)
+        ALWAYS_UPDATE = {'translations', 'tessdata'}
 
         for item in os.listdir(src_base):
             src_path = os.path.join(src_base, item)
             dst_path = os.path.join(user_base, item)
-            try:
-                if os.path.isdir(src_path):
-                    shutil.copytree(src_path, dst_path, dirs_exist_ok=True)
-                    print(f"DEBUG: Kopiert Ordner {item} nach {dst_path}")
-                else:
-                    shutil.copy2(src_path, dst_path)
-                    print(f"DEBUG: Kopiert Datei {item} nach {dst_path}")
-            except Exception as e:
-                print(f"Fehler beim Kopieren von {item}: {e}")
 
-        # Marker setzen (optional)
+            try:
+                if item in ALWAYS_UPDATE:
+                    # ---------- Immer aktualisieren (überschreiben) ----------
+                    if os.path.isdir(src_path):
+                        # Zielordner erstellen (falls nicht vorhanden)
+                        os.makedirs(dst_path, exist_ok=True)
+                        # Rekursiv alle Dateien aus dem Quellordner kopieren
+                        # (bestehende Dateien werden überschrieben)
+                        for root, dirs, files in os.walk(src_path):
+                            rel_path = os.path.relpath(root, src_path)
+                            target_dir = os.path.join(dst_path, rel_path)
+                            os.makedirs(target_dir, exist_ok=True)
+                            for file in files:
+                                src_file = os.path.join(root, file)
+                                dst_file = os.path.join(target_dir, file)
+                                shutil.copy2(src_file, dst_file)  # kopiert + erhält Metadaten
+                        print(f"DEBUG: Aktualisiert (überschrieben) Ordner '{item}' → {dst_path}")
+                    else:
+                        # Einzelne Datei (falls mal vorkommt)
+                        shutil.copy2(src_path, dst_path)
+                        print(f"DEBUG: Aktualisiert (überschrieben) Datei '{item}' → {dst_path}")
+
+                else:
+                    # ---------- Nur initial befüllen (kein Überschreiben) ----------
+                    if not os.path.exists(dst_path):
+                        if os.path.isdir(src_path):
+                            shutil.copytree(src_path, dst_path)
+                            print(f"DEBUG: Initial kopiert Ordner '{item}' → {dst_path}")
+                        else:
+                            shutil.copy2(src_path, dst_path)
+                            print(f"DEBUG: Initial kopiert Datei '{item}' → {dst_path}")
+                    else:
+                        print(f"DEBUG: Überspringe '{item}' (existiert bereits im Userverzeichnis)")
+
+            except Exception as e:
+                print(f"Fehler beim Verarbeiten von '{item}': {e}")
+
+        # Optionaler Marker, um anzuzeigen, dass die Initialisierung erfolgt ist
         marker = os.path.join(user_base, ".initialized")
         with open(marker, 'w') as f:
             f.write("initialized")
-        print("✅ Default-Daten wurden in Benutzerverzeichnis kopiert.")
+        print("✅ Default-Daten wurden ins Benutzerverzeichnis kopiert/aktualisiert.")
 
     @classmethod
     def _debug_tool_paths(cls):
@@ -1247,6 +1284,7 @@ class FilenameSettingsDialog(QDialog):
         self.setWindowTitle(parent.tr('filename_settings_title'))
 
         self.setMinimumWidth(950)
+        self.setMinimumHeight(700)
         self.setModal(True)
         self.setMaximumSize(max_dialog_width, max_dialog_height)
         self.setSizeGripEnabled(True)
@@ -11886,7 +11924,7 @@ class TextTemplateDialog(QDialog):
         max_dialog_width  = int(screen_geometry.width()  * 0.9)   # 90% der verfügbaren Breite
 
         self.setWindowTitle(self.lang.tr('text_input'))
-        self.setMinimumSize(400, 300)                     # kleinerer Startwert, kein Zwang
+        self.setMinimumSize(700, 400)                     # kleinerer Startwert, kein Zwang
         self.setMaximumSize(max_dialog_width, max_dialog_height)
         self.setSizeGripEnabled(True)                     # erlaubt manuelles Nachziehen
 
@@ -14573,7 +14611,7 @@ class SignatureSettingsDialog(QDialog):
         max_dialog_width  = int(screen_geometry.width()  * 0.9)   # 90% der verfügbaren Breite
 
         self.setWindowTitle(self.lang.tr('signature_settings'))
-        self.setMinimumSize(400, 300)
+        self.setMinimumSize(400, 500)
         self.setMaximumSize(max_dialog_width, max_dialog_height)
         self.setSizeGripEnabled(True)
 
@@ -15243,26 +15281,45 @@ class SignatureSettingsDialog(QDialog):
 
     ### Neue Signatur erstellen (zuschneiden und Transparenz)
     def create_signature_from_scan(self, sig_number):
-        """Erstellt eine Signatur aus einem gescannten PDF/Bild ohne rembg (nur OpenCV+Otsu)."""
+        """Erstellt eine Signatur – zuerst Erklärung, dann Dateiauswahl, dann Name und Linienstärke."""
+
+        # 0. Erklärungsdialog anzeigen (was für ein PDF, wie vorbereiten)
+        instruction_dialog = myUniversalDialog(
+            self,
+            title=self.lang.tr('signature_prepare_title'),
+            message=self.lang.tr('signature_prepare_instruction'),
+            buttons=[(self.lang.tr('btn_ok'), "success", "ok")],
+            icon_type="information",
+            voice_message=self.lang.tr('signature_prepare_voice'),
+            text_alignment=Qt.AlignLeft
+        )
+        instruction_dialog.exec_()
+
         # 1. Datei auswählen
         file_filter = (self.lang.tr('image_pdf_filter') +
-                    " (*.png *.jpg *.jpeg *.bmp *.pdf);;" +
+                    " (*.pdf);;" +
                     self.lang.tr('file_all') + " (*.*)")
         filepath, _ = QFileDialog.getOpenFileName(
-            self,
-            self.lang.tr('signature_create_title'),
-            "",
-            file_filter
+            self, self.lang.tr('signature_create_title'), "", file_filter
         )
         if not filepath:
             return
 
-        # 2. Dateinamen abfragen (myUniversalDialog mit Eingabefeld)
+        # 2. Basis-Dateinamen
         base_name = os.path.splitext(os.path.basename(filepath))[0]
         base_name = re.sub(r'[\\/*?:"<>|]', "_", base_name)
         default_name = f"{base_name}_clean.png"
 
-        name_dialog = myUniversalDialog(
+        # 3. Übersetzte Combobox-Einträge
+        thickness_items = [
+            self.lang.tr('sig_thickness_normal'),
+            self.lang.tr('sig_thickness_bold'),
+            self.lang.tr('sig_thickness_very_bold')
+        ]
+        default_thickness = self.lang.tr('sig_thickness_bold')  # "Kräftig (empfohlen)"
+
+        # 4. Dialog für Name und Linienstärke
+        dialog = myUniversalDialog(
             self,
             title=self.lang.tr('signature_name_title'),
             message=self.lang.tr('signature_name_message'),
@@ -15275,18 +15332,29 @@ class SignatureSettingsDialog(QDialog):
             text_alignment=Qt.AlignLeft,
             input_fields=[
                 {"type": "text", "name": "filename", "label": self.lang.tr('signature_name_label'),
-                "placeholder": default_name, "default": default_name}
+                "placeholder": default_name, "default": default_name},
+                {"type": "combobox", "name": "thickness", "label": self.lang.tr('sig_thickness_label'),
+                "items": thickness_items, "default": default_thickness}
             ]
         )
-        if name_dialog.exec_() != QDialog.Accepted:
+        if dialog.exec_() != QDialog.Accepted:
             return
-        chosen_name = name_dialog.get_input_value("filename")
+
+        chosen_name = dialog.get_input_value("filename")
         if not chosen_name.strip():
             chosen_name = default_name
         if not chosen_name.lower().endswith('.png'):
             chosen_name += '.png'
 
-        # 3. Bild aus PDF oder Bilddatei laden
+        thickness_choice = dialog.get_input_value("thickness")
+        if thickness_choice == self.lang.tr('sig_thickness_normal'):
+            dilate_final = 1 # 0
+        elif thickness_choice == self.lang.tr('sig_thickness_very_bold'):
+            dilate_final = 4 # 2
+        else:  # "Kräftig (empfohlen)"
+            dilate_final = 2 # 1
+
+        # 5. Bildverarbeitung (unverändert)
         try:
             from PIL import Image
             import numpy as np
@@ -15309,40 +15377,62 @@ class SignatureSettingsDialog(QDialog):
             else:
                 img = Image.open(filepath).convert("RGB")
 
-            # 4. Binarisierung mit Otsu und Konturfindung
             img_cv = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
             gray = cv2.cvtColor(img_cv, cv2.COLOR_BGR2GRAY)
-            _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-            contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-            if contours:
-                # Größte zusammenhängende Fläche = Unterschrift
-                max_contour = max(contours, key=cv2.contourArea)
-                x, y, w, h = cv2.boundingRect(max_contour)
-                # Etwas Rand hinzufügen
-                x = max(0, x - 5)
-                y = max(0, y - 5)
-                w = min(img.width - x, w + 10)
-                h = min(img.height - y, h + 10)
-                cropped = img.crop((x, y, x + w, y + h))
+            binary = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+                                        cv2.THRESH_BINARY_INV, 35, 10)
+
+            kernel = np.ones((5, 5), np.uint8)
+            dilated = cv2.dilate(binary, kernel, iterations=2)
+
+            contours, _ = cv2.findContours(dilated, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            if not contours:
+                mask = binary
+                x, y, w, h = 0, 0, img.width, img.height
             else:
-                # Fallback: gesamtes Bild nehmen
-                cropped = img
+                contours = sorted(contours, key=cv2.contourArea, reverse=True)
+                best_contour = None
+                img_area = img.width * img.height
+                for cnt in contours:
+                    area = cv2.contourArea(cnt)
+                    if area < 50:
+                        continue
+                    if area > 0.8 * img_area:
+                        continue
+                    best_contour = cnt
+                    break
+                if best_contour is None:
+                    best_contour = contours[0]
 
-            # 5. Transparenten PNG-Hintergrund erstellen
-            result = Image.new("RGBA", cropped.size, (0, 0, 0, 0))
-            gray_cropped = cropped.convert("L")
-            # Alles, was heller als ein Schwellwert ist, wird transparent
-            mask = gray_cropped.point(lambda p: 255 if p < 200 else 0)
-            result.paste(cropped, (0, 0), mask)
+                x, y, w, h = cv2.boundingRect(best_contour)
+                padding = 10
+                x = max(0, x - padding)
+                y = max(0, y - padding)
+                w = min(img.width - x, w + 2 * padding)
+                h = min(img.height - y, h + 2 * padding)
+                mask = binary[y:y+h, x:x+w]
 
-            # 6. Speichern
+            cropped_img = img.crop((x, y, x + w, y + h))
+            if mask.shape[:2] != (h, w):
+                mask = cv2.resize(mask, (w, h), interpolation=cv2.INTER_NEAREST)
+
+            if dilate_final > 0:
+                kernel_thick = np.ones((3, 3), np.uint8)
+                for _ in range(dilate_final):
+                    mask = cv2.dilate(mask, kernel_thick, iterations=1)
+
+            alpha = mask
+            rgba = Image.new("RGBA", cropped_img.size)
+            rgba.paste(cropped_img, (0, 0))
+            rgba.putalpha(Image.fromarray(alpha))
+            rgba = self._auto_crop_transparent(rgba)
+
             sig_dir = Config.SIGNATURES_DIR
             os.makedirs(sig_dir, exist_ok=True)
             dest_path = os.path.join(sig_dir, chosen_name)
-            result.save(dest_path, "PNG")
+            rgba.save(dest_path, "PNG")
 
-            # 7. ComboBox aktualisieren und auswählen
             combo = getattr(self, f'combo_sig{sig_number}')
             self.load_signatures_to_combo(combo)
             for i in range(combo.count()):
@@ -15351,10 +15441,8 @@ class SignatureSettingsDialog(QDialog):
                     break
             self.update_preview(sig_number)
 
-            # 8. Erfolgsmeldung
             myUniversalDialog(
-                self,
-                title=self.lang.tr('success'),
+                self, title=self.lang.tr('success'),
                 message=self.lang.tr('signature_created_success', chosen_name),
                 buttons=[(self.lang.tr('btn_ok'), "success", "ok")],
                 icon_type="success"
@@ -15362,8 +15450,7 @@ class SignatureSettingsDialog(QDialog):
 
         except Exception as e:
             myUniversalDialog(
-                self,
-                title=self.lang.tr('error'),
+                self, title=self.lang.tr('error'),
                 message=self.lang.tr('signature_create_error', str(e)),
                 buttons=[(self.lang.tr('btn_ok'), "danger", "ok")],
                 icon_type="error"
@@ -15372,15 +15459,14 @@ class SignatureSettingsDialog(QDialog):
     def _auto_crop_transparent(self, pil_image):
         """
         Schneidet ein PIL-Bild mit Alphakanal auf das nicht-transparente Rechteck zu.
+        (unverändert, aber sicherstellen, dass es aufgerufen wird)
         """
         if pil_image.mode != 'RGBA':
             pil_image = pil_image.convert('RGBA')
         data = np.array(pil_image)
         alpha = data[:, :, 3]
-        # Koordinaten der nicht-transparenten Pixel
         non_transparent = np.where(alpha > 0)
         if len(non_transparent[0]) == 0:
-            # Falls alles transparent – nichts zuschneiden
             return pil_image
         top = non_transparent[0].min()
         bottom = non_transparent[0].max()
@@ -17412,225 +17498,227 @@ class PDFTextViewer(QDialog):
         self.change_font_size(str(saved_size))
 
     def init_ui(self):
-      """UI mit ScrollArea für kleine Bildschirme – Kopf und Navigationsleiste bleiben fix."""
-      # Bildschirmgröße für maximale Dialogmaße ermitteln
-      screen = QApplication.primaryScreen()
-      screen_geometry = screen.availableGeometry()
-      max_dialog_height = int(screen_geometry.height() * 0.8)   # 80% der verfügbaren Höhe
-      max_dialog_width  = int(screen_geometry.width()  * 0.9)   # 90% der verfügbaren Breite
+        """UI mit ScrollArea für kleine Bildschirme – Kopf und Navigationsleiste bleiben fix."""
+        # Bildschirmgröße für maximale Dialogmaße ermitteln
+        screen = QApplication.primaryScreen()
+        screen_geometry = screen.availableGeometry()
+        self.setMinimumSize(900, 650)
+        max_dialog_height = int(screen_geometry.height() * 0.8)   # 80% der verfügbaren Höhe
+        max_dialog_width  = int(screen_geometry.width()  * 0.9)   # 90% der verfügbaren Breite
 
-      self.setMaximumSize(max_dialog_width, max_dialog_height)
-      self.setSizeGripEnabled(True)
+        self.setMaximumSize(max_dialog_width, max_dialog_height)
+        self.setSizeGripEnabled(True)
 
-      # Hauptlayout (vertikal)
-      main_layout = QVBoxLayout(self)
-      main_layout.setContentsMargins(10, 10, 10, 10)
-      main_layout.setSpacing(12)
+        # Hauptlayout (vertikal)
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(10, 10, 10, 10)
+        main_layout.setSpacing(12)
 
-      # ========== 1. Kopfbereich (Header) – KEINE SCROLLAREA ==========
-      header = QWidget()
-      self.header_widget = header   # Für adjust_window_for_font_size benötigt
-      header_layout = QHBoxLayout(header)
-      header_layout.setContentsMargins(0, 0, 0, 15)
-      header_layout.setSpacing(10)
+        # ========== 1. Kopfbereich (Header) – KEINE SCROLLAREA ==========
+        header = QWidget()
+        self.header_widget = header   # Für adjust_window_for_font_size benötigt
+        header_layout = QHBoxLayout(header)
+        header_layout.setContentsMargins(0, 0, 0, 15)
+        header_layout.setSpacing(10)
 
-      header_layout.addStretch(1)
+        header_layout.addStretch(1)
 
-      if os.path.exists(Config.IMAGE_PATH):
-          self.logo_label = QLabel()
-          logo_pixmap = QPixmap(Config.IMAGE_PATH).scaled(
-              80, 80, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-          self.logo_label.setPixmap(logo_pixmap)
-          self.logo_label.setAlignment(Qt.AlignVCenter)
-          header_layout.addWidget(self.logo_label)
-          header_layout.addStretch(1)
+        if os.path.exists(Config.IMAGE_PATH):
+            self.logo_label = QLabel()
+            logo_pixmap = QPixmap(Config.IMAGE_PATH).scaled(
+                80, 80, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            self.logo_label.setPixmap(logo_pixmap)
+            self.logo_label.setAlignment(Qt.AlignVCenter)
+            header_layout.addWidget(self.logo_label)
+            header_layout.addStretch(1)
 
-      self.title_label = QLabel(self.parent.tr('ocr_text_window'))
-      self.title_label.setStyleSheet("""
-          QLabel {
-              color: white;
-              font-size: 24px;
-              font-weight: bold;
-              padding: 5px;
-          }
-      """)
-      self.title_label.setAlignment(Qt.AlignCenter)
-      header_layout.addWidget(self.title_label)
-      header_layout.addStretch(1)
+        self.title_label = QLabel(self.parent.tr('ocr_text_window'))
+        self.title_label.setStyleSheet("""
+            QLabel {
+                color: white;
+                font-size: 24px;
+                font-weight: bold;
+                padding: 5px;
+            }
+        """)
+        self.title_label.setAlignment(Qt.AlignCenter)
+        header_layout.addWidget(self.title_label)
+        header_layout.addStretch(1)
 
-      if os.path.exists(Config.APP_ICON_PATH):
-          self.icon_label = QLabel()
-          icon_pixmap = QPixmap(Config.APP_ICON_PATH).scaled(
-              60, 60, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-          self.icon_label.setPixmap(icon_pixmap)
-          self.icon_label.setAlignment(Qt.AlignVCenter)
-          header_layout.addWidget(self.icon_label)
+        if os.path.exists(Config.APP_ICON_PATH):
+            self.icon_label = QLabel()
+            icon_pixmap = QPixmap(Config.APP_ICON_PATH).scaled(
+                60, 60, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            self.icon_label.setPixmap(icon_pixmap)
+            self.icon_label.setAlignment(Qt.AlignVCenter)
+            header_layout.addWidget(self.icon_label)
 
-      header_layout.addStretch(1)
-      main_layout.addWidget(header)
+        header_layout.addStretch(1)
+        main_layout.addWidget(header)
 
-      # ========== 2. ScrollArea für den gesamten interaktiven Inhalt (Toolbar + Text) ==========
-      scroll_area = QScrollArea()
-      scroll_area.setWidgetResizable(True)
-      scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-      scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-      scroll_area.setStyleSheet("""
-          QScrollArea {
-              border: none;
-              background-color: transparent;
-          }
-          QScrollBar:vertical {
-              background: #3D3D3D;
-              width: 16px;
-              margin: 0px;
-          }
-          QScrollBar::handle:vertical {
-              background: #AAAAAA;
-              min-height: 20px;
-              border-radius: 8px;
-          }
-          QScrollBar::handle:vertical:hover {
-              background: #CCCCCC;
-          }
-          QScrollBar::sub-line:vertical, QScrollBar::add-line:vertical {
-              height: 0px;
-          }
-      """)
+        # ========== 2. ScrollArea für den gesamten interaktiven Inhalt (Toolbar + Text) ==========
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        scroll_area.setStyleSheet("""
+            QScrollArea {
+                border: none;
+                background-color: transparent;
+            }
+            QScrollBar:vertical {
+                background: #3D3D3D;
+                width: 16px;
+                margin: 0px;
+            }
+            QScrollBar::handle:vertical {
+                background: #AAAAAA;
+                min-height: 20px;
+                border-radius: 8px;
+            }
+            QScrollBar::handle:vertical:hover {
+                background: #CCCCCC;
+            }
+            QScrollBar::sub-line:vertical, QScrollBar::add-line:vertical {
+                height: 0px;
+            }
+        """)
 
-      content_widget = QWidget()
-      content_widget.setStyleSheet("background-color: #1E1E1E;")
-      content_layout = QVBoxLayout(content_widget)
-      content_layout.setContentsMargins(0, 0, 0, 0)
-      content_layout.setSpacing(12)
+        content_widget = QWidget()
+        content_widget.setStyleSheet("background-color: #1E1E1E;")
+        content_layout = QVBoxLayout(content_widget)
+        content_layout.setContentsMargins(0, 0, 0, 0)
+        content_layout.setSpacing(12)
 
-      # Toolbar – erste Zeile (Schriftgröße + Suche)
-      top_toolbar = QHBoxLayout()
+        # Toolbar – erste Zeile (Schriftgröße + Suche)
+        top_toolbar = QHBoxLayout()
 
-      # Kompakte Schriftgrößen-Auswahl
-      font_layout = QHBoxLayout()
-      font_layout.setContentsMargins(0, 0, 10, 0)
+        # Kompakte Schriftgrößen-Auswahl
+        font_layout = QHBoxLayout()
+        font_layout.setContentsMargins(0, 0, 10, 0)
 
-      self.font_combo = QComboBox()
-      sizes = [12, 14, 16, 18, 20, 22, 24, 28, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62, 64, 66, 68, 70, 140, 210, 280, 350, 420, 490]
-      self.font_combo.addItems(map(str, sizes))
-      self.font_combo.setCurrentIndex(sizes.index(24))
-      self.font_combo.currentTextChanged.connect(self.change_font_size)
-      self.font_combo.setFixedWidth(70)
+        self.font_combo = QComboBox()
+        sizes = [12, 14, 16, 18, 20, 22, 24, 28, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62, 64, 66, 68, 70, 140, 210, 280, 350, 420, 490]
+        self.font_combo.addItems(map(str, sizes))
+        self.font_combo.setCurrentIndex(sizes.index(24))
+        self.font_combo.currentTextChanged.connect(self.change_font_size)
+        self.font_combo.setFixedWidth(70)
 
-      font_layout.addWidget(QLabel(self.lang.tr('text_font_size')))
-      font_layout.addWidget(self.font_combo)
+        font_layout.addWidget(QLabel(self.lang.tr('text_font_size')))
+        font_layout.addWidget(self.font_combo)
 
-      self.noto_btn = QPushButton(self.lang.tr('btn_info_noto_font_install'))
-      self.noto_btn.clicked.connect(self.parent.show_noto_install_guide)
-      self.parent.style_button(self.noto_btn, 'primary', (100, 25))
-      font_layout.addWidget(self.noto_btn)
+        self.noto_btn = QPushButton(self.lang.tr('btn_info_noto_font_install'))
+        self.noto_btn.clicked.connect(self.parent.show_noto_install_guide)
+        self.parent.style_button(self.noto_btn, 'primary', (100, 25))
+        font_layout.addWidget(self.noto_btn)
 
-      top_toolbar.addLayout(font_layout)
+        top_toolbar.addLayout(font_layout)
 
-      # Suchleiste
-      self.search_edit = QLineEdit()
-      self.search_edit.setPlaceholderText(self.lang.tr('search_placeholder'))
-      self.search_edit.returnPressed.connect(self.execute_search)
-      self.search_edit.textChanged.connect(self._on_search_text_changed)
-      top_toolbar.addWidget(self.search_edit)
+        # Suchleiste
+        self.search_edit = QLineEdit()
+        self.search_edit.setPlaceholderText(self.lang.tr('search_placeholder'))
+        self.search_edit.returnPressed.connect(self.execute_search)
+        self.search_edit.textChanged.connect(self._on_search_text_changed)
+        top_toolbar.addWidget(self.search_edit)
 
-      self.prev_btn = QPushButton("◄ " + self.lang.tr('btn_prev_result'))
-      self.prev_btn.clicked.connect(self.search_previous)
-      self.parent.style_button(self.prev_btn, 'primary', (120, 25))
-      self.prev_btn.setFocusPolicy(Qt.StrongFocus)
-      top_toolbar.addWidget(self.prev_btn)
+        self.prev_btn = QPushButton("◄ " + self.lang.tr('btn_prev_result'))
+        self.prev_btn.clicked.connect(self.search_previous)
+        self.parent.style_button(self.prev_btn, 'primary', (120, 25))
+        self.prev_btn.setFocusPolicy(Qt.StrongFocus)
+        top_toolbar.addWidget(self.prev_btn)
 
-      self.search_status_label = QLabel(self.lang.tr('search_results', 0, 0))
-      self.search_status_label.setAlignment(Qt.AlignCenter)
-      top_toolbar.addWidget(self.search_status_label)
+        self.search_status_label = QLabel(self.lang.tr('search_results', 0, 0))
+        self.search_status_label.setAlignment(Qt.AlignCenter)
+        top_toolbar.addWidget(self.search_status_label)
 
-      self.next_btn = QPushButton(self.lang.tr('btn_next_result') + " ►")
-      self.next_btn.clicked.connect(self.search_next)
-      self.parent.style_button(self.next_btn, 'primary', (120, 25))
-      self.next_btn.setFocusPolicy(Qt.StrongFocus)
-      top_toolbar.addWidget(self.next_btn)
+        self.next_btn = QPushButton(self.lang.tr('btn_next_result') + " ►")
+        self.next_btn.clicked.connect(self.search_next)
+        self.parent.style_button(self.next_btn, 'primary', (120, 25))
+        self.next_btn.setFocusPolicy(Qt.StrongFocus)
+        top_toolbar.addWidget(self.next_btn)
 
-      content_layout.addLayout(top_toolbar)
+        content_layout.addLayout(top_toolbar)
 
-      # Textanzeige
-      self._debug_list_fonts()  # Debug-Aufruf beibehalten
-      self.text_edit = QTextEdit()
-      self.text_edit.setReadOnly(True)
+        # Textanzeige
+        self._debug_list_fonts()  # Debug-Aufruf beibehalten
+        self.text_edit = QTextEdit()
+        self.text_edit.setReadOnly(True)
 
-      # Setze eine Grundschriftart, die existiert (z. B. "Noto Sans" oder "Helvetica")
-      font = QFont("Noto Sans")
-      font.setStyleHint(QFont.SansSerif)
-      font.setPointSize(24)
-      self.text_edit.setFont(font)
-      self.text_edit.setStyleSheet("QTextEdit { color: white; background-color: #000000 }")
+        # Setze eine Grundschriftart, die existiert (z. B. "Noto Sans" oder "Helvetica")
+        font = QFont("Noto Sans")
+        font.setStyleHint(QFont.SansSerif)
+        font.setPointSize(24)
+        self.text_edit.setFont(font)
+        self.text_edit.setStyleSheet("QTextEdit { color: white; background-color: #000000 }")
 
-      content_layout.addWidget(self.text_edit, 1)  # Dehnung für den Textbereich
+        content_layout.addWidget(self.text_edit, 1)  # Dehnung für den Textbereich
 
-      # Dehnbereich am Ende, damit der Inhalt nicht auseinander gezogen wird
-      content_layout.addStretch()
+        # Dehnbereich am Ende, damit der Inhalt nicht auseinander gezogen wird
+        content_layout.addStretch()
 
-      scroll_area.setWidget(content_widget)
-      main_layout.addWidget(scroll_area, 1)   # ScrollArea nimmt verfügbaren Platz
+        scroll_area.setWidget(content_widget)
+        main_layout.addWidget(scroll_area, 1)   # ScrollArea nimmt verfügbaren Platz
 
-      # ========== 3. Fussbereich (Navigation + Buttons) – KEINE SCROLLAREA ==========
-      nav_layout = QHBoxLayout()
-      nav_layout.setContentsMargins(0, 0, 0, 0)
+        # ========== 3. Fussbereich (Navigation + Buttons) – KEINE SCROLLAREA ==========
 
-      self.page_spin = QSpinBox()
-      self.page_spin.setMinimum(1)
-      self.page_spin.setMaximum(1)
-      self.page_spin.setValue(1)
-      self.page_spin.setFixedWidth(80)
-      self.page_spin.setToolTip(self.lang.tr('goto_page'))
-      self.page_spin.installEventFilter(self)
-      self.page_spin.valueChanged[int].connect(self.handle_page_change)
+        nav_layout = QHBoxLayout()
+        nav_layout.setContentsMargins(0, 0, 0, 0)
 
-      nav_layout.addWidget(QLabel(self.lang.tr('goto_page') + ":"))
-      nav_layout.addWidget(self.page_spin)
+        self.page_spin = QSpinBox()
+        self.page_spin.setMinimum(1)
+        self.page_spin.setMaximum(1)
+        self.page_spin.setValue(1)
+        self.page_spin.setFixedWidth(80)
+        self.page_spin.setToolTip(self.lang.tr('goto_page'))
+        self.page_spin.installEventFilter(self)
+        self.page_spin.valueChanged[int].connect(self.handle_page_change)
 
-      self.page_count_label = QLabel(self.lang.tr('page_count', 1))
-      self.page_count_label.setFixedWidth(60)
-      nav_layout.addWidget(self.page_count_label)
+        nav_layout.addWidget(QLabel(self.lang.tr('goto_page') + ":"))
+        nav_layout.addWidget(self.page_spin)
 
-      nav_layout.addStretch(1)
+        self.page_count_label = QLabel(self.lang.tr('page_count', 1))
+        self.page_count_label.setFixedWidth(60)
+        nav_layout.addWidget(self.page_count_label)
 
-      self.close_btn = QPushButton(self.lang.tr('btn_close'))
-      self.close_btn.clicked.connect(self.close)
-      self.parent.style_button(self.close_btn, 'danger', (120, 25))
-      self.close_btn.setFocusPolicy(Qt.StrongFocus)
-      nav_layout.addWidget(self.close_btn)
+        nav_layout.addStretch(1)
 
-      main_layout.addLayout(nav_layout)
+        self.close_btn = QPushButton(self.lang.tr('btn_close'))
+        self.close_btn.clicked.connect(self.close)
+        self.parent.style_button(self.close_btn, 'danger', (120, 25))
+        self.close_btn.setFocusPolicy(Qt.StrongFocus)
+        nav_layout.addWidget(self.close_btn)
 
-      # Tab-Reihenfolge
-      self.setTabOrder(self.font_combo, self.search_edit)
-      self.setTabOrder(self.search_edit, self.prev_btn)
-      self.setTabOrder(self.prev_btn, self.next_btn)
-      self.setTabOrder(self.next_btn, self.page_spin)
-      self.setTabOrder(self.page_spin, self.close_btn)
-      self.setTabOrder(self.close_btn, self.text_edit)
+        main_layout.addLayout(nav_layout)
 
-      # Barrierefreiheit
-      self.font_combo.setAccessibleName(self.lang.tr('text_font_size'))
-      self.search_edit.setAccessibleName(self.lang.tr('search_placeholder'))
-      self.prev_btn.setAccessibleName(self.lang.tr('btn_prev_result'))
-      self.next_btn.setAccessibleName(self.lang.tr('btn_next_result'))
-      self.page_spin.setAccessibleName(self.lang.tr('goto_page'))
-      self.close_btn.setAccessibleName(self.lang.tr('btn_close'))
-      self.text_edit.setAccessibleName(self.lang.tr('text_preview_label'))
+        # Tab-Reihenfolge
+        self.setTabOrder(self.font_combo, self.search_edit)
+        self.setTabOrder(self.search_edit, self.prev_btn)
+        self.setTabOrder(self.prev_btn, self.next_btn)
+        self.setTabOrder(self.next_btn, self.page_spin)
+        self.setTabOrder(self.page_spin, self.close_btn)
+        self.setTabOrder(self.close_btn, self.text_edit)
 
-      # Event Filter
-      self.search_edit.installEventFilter(self)
+        # Barrierefreiheit
+        self.font_combo.setAccessibleName(self.lang.tr('text_font_size'))
+        self.search_edit.setAccessibleName(self.lang.tr('search_placeholder'))
+        self.prev_btn.setAccessibleName(self.lang.tr('btn_prev_result'))
+        self.next_btn.setAccessibleName(self.lang.tr('btn_next_result'))
+        self.page_spin.setAccessibleName(self.lang.tr('goto_page'))
+        self.close_btn.setAccessibleName(self.lang.tr('btn_close'))
+        self.text_edit.setAccessibleName(self.lang.tr('text_preview_label'))
 
-      # Keine festen Mindestgrößen mehr, die zu breit werden
-      self.setMinimumSize(900, 500)
+        # Event Filter
+        self.search_edit.installEventFilter(self)
 
-      # Initiale Größenanpassung
-      self.adjustSize()
-      if self.height() > max_dialog_height:
-          self.resize(self.width(), max_dialog_height)
-      if self.width() > max_dialog_width:
-          self.resize(max_dialog_width, self.height())
+        # Keine festen Mindestgrößen mehr, die zu breit werden
+        self.setMinimumSize(900, 500)
+
+        # Initiale Größenanpassung
+        self.adjustSize()
+        if self.height() > max_dialog_height:
+            self.resize(self.width(), max_dialog_height)
+        if self.width() > max_dialog_width:
+            self.resize(max_dialog_width, self.height())
 
     def load_pdf_text(self, pdf_path):
         try:
@@ -17715,6 +17803,10 @@ class PDFTextViewer(QDialog):
             return True
 
         return super().eventFilter(source, event)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.search_edit.setFocus()
 
     def _on_search_text_changed(self, text):
         """Wird aufgerufen wenn sich der Suchtext ändert - setzt Suche zurück"""
@@ -18391,7 +18483,7 @@ class Language:
                     lang_code = filename[13:-3]
                     # print(f"DEBUG: Gefundene Datei: {filename}, lang_code={lang_code}")
                     if lang_code in translations:
-                        print(f"DEBUG: Sprache {lang_code} bereits geladen, überspringe {filename}")
+                        # print(f"DEBUG: Sprache {lang_code} bereits geladen, überspringe {filename}")
                         continue
 
                     module_path = os.path.join(path, filename)
@@ -25193,6 +25285,17 @@ class myUniversalDialog(QDialog):
             widget.setDate(default)
             layout.addWidget(widget)
 
+        elif field_type == 'combobox':
+            widget = QComboBox()
+            items = field_config.get('items', [])
+            widget.addItems(items)
+            default = field_config.get('default', None)
+            if default is not None and default in items:
+                widget.setCurrentText(default)
+            elif items:
+                widget.setCurrentIndex(0)
+            layout.addWidget(widget)
+
         self.input_widgets[field_name] = widget
 
         return container
@@ -25484,11 +25587,15 @@ class myUniversalDialog(QDialog):
             for name, widget in self.input_widgets.items():
                 if isinstance(widget, QLineEdit):
                     value = widget.text()
-                    collected_values[name] = value
                 elif isinstance(widget, QSpinBox):
-                    collected_values[name] = widget.value()
+                    value = widget.value()
                 elif isinstance(widget, QDateEdit):
-                    collected_values[name] = widget.date().toString("dd.MM.yyyy")
+                    value = widget.date().toString("dd.MM.yyyy")
+                elif isinstance(widget, QComboBox):
+                    value = widget.currentText()   # oder widget.currentData() falls Sie Daten nutzen
+                else:
+                    value = None
+                collected_values[name] = value
 
             self.input_values = collected_values
 
@@ -26173,11 +26280,12 @@ class PDFViewer(QMainWindow):
 
         file_menu.addSeparator()
 
-        # "&Sofort drucken"
-        print_now_action = QAction(qta.icon('fa5s.print'), self.tr('file_print_now'), self)
-        print_now_action.setShortcut("Ctrl+Alt+P")
-        print_now_action.triggered.connect(self.print_now)
-        file_menu.addAction(print_now_action)
+        if sys.platform == 'darwin':
+            # "&Sofort drucken"
+            print_now_action = QAction(qta.icon('fa5s.print'), self.tr('file_print_now'), self)
+            print_now_action.setShortcut("Ctrl+Alt+P")
+            print_now_action.triggered.connect(self.print_now)
+            file_menu.addAction(print_now_action)
 
         # "&Drucken"
         print_action = QAction(qta.icon('fa5s.print'), self.tr('file_print'), self)
@@ -40625,7 +40733,13 @@ class PDFViewer(QMainWindow):
     def get_app_version_date(self):
         """Gibt das Datum der letzten Änderung dieser Datei zurück."""
         try:
-            mtime = os.path.getmtime(__file__)
+            if getattr(sys, 'frozen', False):
+                # Build-Datum der EXE oder der App
+                mtime = os.path.getmtime(sys.executable)
+            else:
+                # Datum der letzten Speicherung der *.py
+                mtime = os.path.getmtime(__file__)
+
             return datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M:%S")
         except Exception as e:
             return "unknown"
