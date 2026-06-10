@@ -9,6 +9,8 @@ Dark and light mode
 Multilingual user interface
 Accessibility features for visually impaired users
 
+<img width="1596" height="818" alt="ScreenShot1" src="https://github.com/user-attachments/assets/07572854-e8f3-4246-99f2-a36138fab338" />
+
 App /exe for:
 
 macOS Intel
