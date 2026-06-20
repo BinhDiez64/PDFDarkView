@@ -1,102 +1,173 @@
-# PDFDarkView
-PDF viewer with extensive editing tools, OCR, dark/light mode, a multilingual user interface, and optimization for people with visual impairments.
+PDFDarkView
 
-Features:
+PDF viewer and editor with OCR, accessibility features, multilingual support, and advanced PDF processing tools.
 
-PDF viewing and editing
-OCR support via Tesseract
-Dark and light mode
-Multilingual user interface
-Accessibility features for visually impaired users
+PDFDarkView combines PDF viewing, editing, OCR recognition, document conversion, accessibility tools, and PDF optimization in a single application. It is designed for both everyday PDF workflows and users with visual impairments.
 
-<img width="1596" height="818" alt="ScreenShot1" src="https://github.com/user-attachments/assets/07572854-e8f3-4246-99f2-a36138fab338" />
+⸻
 
-PDFDarkView - Kernfunktionen
+Features
 
-Lesezeichen hinzufügen und verwalten
-Zu Lesezeichen springen
-OCR durchführen
-Volltextsuche 
-Textfenster 
-Dark/Light Mode
-Sprachausgabe
-Zoom (Seitenbreite, Zwei Seiten, Übersicht)
+Core Features
 
-Einfügunge:
-Text einfügen
-Kreuz einfügen
-Signatur einfügen (passwortgeschützt)
-Bild einfügen
-Rechteck einfügen
-Ellipse einfügen
-Linie einfügen
-Pfeil einfügen
-Seitenzahlen einfügen
-Text-Wasserzeichen
-Bild-Wasserzeichen
+Feature	Description
+PDF Viewing	Open and navigate PDF documents efficiently
+PDF Editing	Insert and modify content directly in PDFs
+OCR Support	Text recognition powered by Tesseract OCR
+Full-Text Search	Search document content quickly
+Bookmarks	Create, manage, and navigate bookmarks
+Text Panel	View and work with extracted document text
+Text-to-Speech	Read documents aloud
+Dark & Light Mode	Comfortable viewing in any environment
+Multilingual UI	Available in 64 languages
+Accessibility	Optimized for visually impaired users
 
-Auslöschung (schwarz/weiß)
+⸻
 
-Seitenaktionen:
-Seiten drehen
-Alle Seiten drehen
-Seiten normalisieren
-Alle Seiten normalisieren
-Seiten löschen
-Seiten entnehmen
-Seiten einfügen
-Seiten verschieben
-Seitengröße ändern
-Mehrere Seiten auf ein Blatt (N-Up))
+Editing Tools
 
-PDFs zusammenführen
-PDF übereinanderlegen
-PDF zuschneiden
-PDF glätten
-PDF optimieren
+Insert Elements
 
-Export als Pages
-Export als DOCX
-Export als TXT
-Bilder extrahieren
-Als Bilder exportieren
+Tool
 
-Dokument schützen
-PDF/A konvertieren
+Insert Text
 
-Metadaten bearbeiten
+Insert Image
 
-Einstellungen:
-Sprachausgabe
-OCR-Einstellungen
-Passwortverwaltung
-Signatur-Einstellungen
-Dateinamen-Formatierung
-Backup-Einstellungen
-Dark Mode Invertierung
-Graustufen-Schwellwert
-Einstellungen exportieren
-Einstellungen importieren
-GUI Sprache wechseln (64 Sprachen verfügbar)
+Insert Signature (password protected)
 
-App /exe for:
+Insert Check Mark
 
-macOS Intel
-macOS Apple Silicon
-Windows 64 Bit
+Insert Rectangle
 
-macOS Security Notice:
+Insert Ellipse
 
-When starting PDFDarkView for the first time on macOS, Gatekeeper may prevent the application from opening because it is not signed by Apple.
+Insert Line
 
-To launch the application:
+Insert Arrow
 
-1. Locate PDFDarkView in Finder.
-2. Right-click (or Control-click) the application.
-3. Select Open.
-4. Click Open again when prompted.
+Insert Page Numbers
 
-After the first launch, PDFDarkView can be opened normally by double-clicking the application.
+Insert Text Watermark
+
+Insert Image Watermark
+
+Redaction
+
+* Black redaction
+* White redaction
+
+⸻
+
+Page Operations
+
+Action
+
+Rotate Page
+
+Rotate All Pages
+
+Normalize Page Orientation
+
+Normalize All Pages
+
+Delete Pages
+
+Extract Pages
+
+Insert Pages
+
+Move Pages
+
+Resize Pages
+
+N-Up (Multiple Pages per Sheet)
+
+⸻
+
+PDF Processing
+
+Function
+
+Merge PDFs
+
+Overlay PDFs
+
+Crop PDFs
+
+Flatten PDFs
+
+Optimize PDFs
+
+Convert to PDF/A
+
+Protect Documents
+
+⸻
+
+Export & Conversion
+
+Export Format
+
+Apple Pages
+
+DOCX
+
+TXT
+
+Export Pages as Images
+
+Extract Embedded Images
+
+⸻
+
+Metadata
+
+* View metadata
+* Edit metadata
+
+⸻
+
+Settings
+
+General
+
+* OCR configuration
+* Text-to-Speech settings
+* Password management
+* Signature settings
+* Backup settings
+* Filename formatting
+
+Appearance
+
+* Dark Mode
+* Color Inversion
+* Grayscale Threshold Adjustment
+
+Configuration
+
+* Export Settings
+* Import Settings
+* Change Application Language
+* 64 Languages Available
+
+⸻
+
+Accessibility
+
+PDFDarkView includes several features designed to improve accessibility:
+
+* Text-to-Speech support
+* Dark Mode
+* Color inversion
+* Adjustable grayscale threshold
+* Large zoom options
+* Full keyboard navigation support
+* Multilingual interface
+
+⸻
+Licenses
 
 Third-Party Licenses
 
@@ -108,4 +179,30 @@ The MIT License of PDFDarkView applies only to the original source code of this 
 
 For details regarding third-party components and their respective licenses, please refer to the THIRD_PARTY_LICENSES.md file.
 
+
+⸻
+
+Supported Platforms
+
+Platform
+
+Windows (64-bit)
+
+macOS (Intel)
+
+macOS (Apple Silicon)
+
+
+macOS Security Notice
+
+PDFDarkView is currently not signed with an Apple Developer Certificate.
+
+When launching the application for the first time, macOS Gatekeeper may block execution.
+
+To open the application:
+
+1. Locate PDFDarkView in Finder.
+2. Right-click (Control-click) the application.
+3. Select Open.
+4. Confirm by clicking Open again.
 
