@@ -590,11 +590,14 @@ class Config:
         """
         Kopiert die Default-Daten aus dem Bundle ins Benutzerverzeichnis.
 
-        translations/ wird bei Versionswechsel von GitHub aktualisiert.
-        Vor dem Download wird der Benutzer gefragt.
+        - tessdata/, Signatures/, png/ usw.: NUR beim ersten Start kopieren
+        - translations/:
+            - Basis-Sprachen (de, en, vi) werden bei Versionswechsel aktualisiert
+            - Alle weiteren Sprachen können über 'Einstellungen → Übersetzungen aktualisieren'
+            manuell von GitHub heruntergeladen werden
         """
         if not getattr(sys, 'frozen', False):
-            return  # Nur im gebündelten (PyInstaller) Modus aktiv
+            return  # Nur im Bundle-Modus aktiv
 
         user_base = cls.get_user_data_dir()
         if not user_base:
@@ -604,6 +607,10 @@ class Config:
         if not os.path.exists(src_base):
             print("⚠️ Kein 'default_data' Ordner im Bundle – überspringe Kopie.")
             return
+
+        # Ziel: User translations Verzeichnis
+        translations_dir = os.path.join(user_base, 'translations')
+        os.makedirs(translations_dir, exist_ok=True)
 
         # Gespeicherte Version laden
         saved_version = get_saved_version()
@@ -616,48 +623,79 @@ class Config:
         print(f"📌 Aktuelle Version: {current_version}")
         print(f"📌 Versionswechsel: {'JA' if version_changed else 'NEIN'}")
 
-        # Basis-Dateien aus dem Bundle kopieren
+        # ----- 1. ALLE Ordner NUR beim ersten Start kopieren -----
+        # Welche Ordner sollen NUR initial kopiert werden (kein Überschreiben)?
+        INITIAL_ONLY = {'tessdata', 'Signatures', 'png'}  # Ordner die nur beim ersten Start kopiert werden
+
+        print("📋 Kopiere Initial-Ordner (nur wenn nicht vorhanden)...")
+
         for item in os.listdir(src_base):
             src_path = os.path.join(src_base, item)
             dst_path = os.path.join(user_base, item)
 
-            try:
-                # translations: Nur initial kopieren wenn nicht vorhanden
-                if item == 'translations':
-                    if not os.path.exists(dst_path):
-                        shutil.copytree(src_path, dst_path)
-                        print(f"✅ Initial kopiert: translations → {dst_path}")
-                    else:
-                        print(f"⏭️ Überspringe translations (existiert bereits)")
-
-                else:
-                    # ANDERE Ordner: Nur initial kopieren
-                    if not os.path.exists(dst_path):
+            # NUR die Ordner aus INITIAL_ONLY verarbeiten
+            if item in INITIAL_ONLY:
+                if not os.path.exists(dst_path):
+                    try:
                         if os.path.isdir(src_path):
                             shutil.copytree(src_path, dst_path)
-                            print(f"✅ Initial kopiert: {item} → {dst_path}")
+                            print(f"  ✅ Initial kopiert: {item} → {dst_path}")
                         else:
                             shutil.copy2(src_path, dst_path)
-                            print(f"✅ Initial kopiert: {item} → {dst_path}")
+                            print(f"  ✅ Initial kopiert: {item} → {dst_path}")
+                    except Exception as e:
+                        print(f"  ❌ Fehler bei {item}: {e}")
+                else:
+                    print(f"  ⏭️ Überspringe {item} (existiert bereits)")
+
+        # ----- 2. Basis-Sprachen (de, en, vi) aus Bundle kopieren -----
+        print("📋 Kopiere Basis-Sprachen (de, en, vi) aus Bundle...")
+
+        # Nur die 3 Basis-Sprachen (immer aus default_data/translations)
+        base_languages = ['translations_de.py', 'translations_en.py', 'translations_vi.py']
+
+        # Quelle für Basis-Sprachen
+        src_translations = os.path.join(src_base, 'translations')
+
+        for filename in base_languages:
+            src_file = os.path.join(src_translations, filename)
+            dst_file = os.path.join(translations_dir, filename)
+
+            if os.path.exists(src_file):
+                try:
+                    # Bei Versionswechsel oder nicht vorhanden: überschreiben/kopieren
+                    if version_changed or not os.path.exists(dst_file):
+                        shutil.copy2(src_file, dst_file)
+                        print(f"  ✅ {'Aktualisiert' if version_changed else 'Kopiert'}: {filename}")
                     else:
-                        print(f"⏭️ Überspringe '{item}' (existiert bereits)")
+                        print(f"  ⏭️ Überspringe {filename} (existiert bereits, kein Versionswechsel)")
+                except Exception as e:
+                    print(f"  ❌ Fehler bei {filename}: {e}")
+            else:
+                print(f"  ⚠️ {filename} nicht in {src_translations} gefunden")
 
-            except Exception as e:
-                print(f"❌ Fehler bei '{item}': {e}")
-
-        # Bei Versionswechsel: Benutzer fragen und asynchron aktualisieren
+        # ----- 3. Bei Versionswechsel: Version speichern (KEINE Abfrage!) -----
         if version_changed:
-            cls._ask_and_update_translations_async()
+            print("🔄 Versionswechsel erkannt - Version wird aktualisiert")
+            # Neue Version speichern
+            save_current_version()
+            print(f"✅ Version auf {current_version} aktualisiert")
 
-        # Neue Version speichern (auch wenn kein Wechsel, zur Sicherheit)
-        save_current_version()
+            # KEINE Abfrage für GitHub-Download!
+            # Der Benutzer kann über das Menü 'Extras → Übersetzungen aktualisieren'
+            # alle Sprachen manuell herunterladen
+        else:
+            print("⏭️ Kein Versionswechsel - Basis-Sprachen bleiben unverändert")
 
         # Marker für erfolgreiche Initialisierung
         marker = os.path.join(user_base, ".initialized")
         if not os.path.exists(marker):
             with open(marker, 'w') as f:
                 f.write("initialized")
-            print("✅ Default-Daten wurden initial ins Benutzerverzeichnis kopiert.")
+            print("✅ Initialisierung abgeschlossen")
+
+            # Hinweis für neue Benutzer (nur beim ersten Start)
+            print("💡 Hinweis: Weitere Sprachen können über 'Extras → Übersetzungen aktualisieren' heruntergeladen werden.")
 
     @classmethod
     def _ask_and_update_translations_async(cls, parent=None):
@@ -696,8 +734,8 @@ class Config:
                 title=parent.tr('download_all_translations'),
                 message=message,
                 buttons=[
-                    (parent.tr('download_translations'), "primary", "ok", 160),
-                    (parent.tr('btn_cancel'), "secondary", "cancel", 120)
+                    (parent.tr('download_all_translations'), "primary", "ok", 500),
+                    (parent.tr('btn_cancel'), "secondary", "cancel", 200)
                 ],
                 icon_type="",
                 text_alignment=Qt.AlignLeft,
@@ -816,7 +854,7 @@ class Config:
         Wird aufgerufen wenn der Benutzer 'Extras → Übersetzungen aktualisieren' wählt.
         """
         if not getattr(sys, 'frozen', False):
-            print("ℹ️ Manuelles Update nur im Bundle-Modus verfügbar")
+            print("ℹ️ Manuelles Update nur im Bundle-Modus verfügbar, damit aktuelle  translations mit evt. veralteten aus dem Repository überschrieben werden.")
             return
 
         # Prüfen ob bereits ein Download läuft
@@ -42997,11 +43035,11 @@ class PDFViewer(QMainWindow):
             message=self.tr('save_dialog_question'),
             buttons=[
                 # "Alles Speichern"
-                (self.tr('save_all', self.tr('text_menu')), "success", "save_all", 400),
+                (self.tr('text_save_all'), "success", "save_all", 400),
                 # "Text anpassen"
-                (self.tr('text_customize'), "primary", "customize", 300),
+                (self.tr('text_customize'), "primary", "customize", 400),
                 # "Weiter bearbeiten"
-                (self.tr('save_continue'), "secondary", "continue", 300),
+                (self.tr('save_continue'), "secondary", "continue", 400),
                 # "Alles verwerfen"
                 (self.tr('text_discard_all'), "danger", "clean", 400)
             ],
