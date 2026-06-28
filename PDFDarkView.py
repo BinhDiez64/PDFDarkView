@@ -80,7 +80,7 @@ from PyQt5 import QtCore, sip
 from PyQt5.QtCore import QDateTime, QDate, QTime, QUrl
 from PyQt5.QtCore import (Qt, QTimer, pyqtSignal, QProcess,QRectF, QThread, QEvent, QSettings, QSignalBlocker, QPoint, QSize, QProcessEnvironment, QPointF,QEasingCurve, QPropertyAnimation,QObject)
 
-from PyQt5.QtWidgets import (QMainWindow,QDesktopWidget, QApplication,QDateTimeEdit, QDateEdit,
+from PyQt5.QtWidgets import (QMainWindow,QDesktopWidget, QApplication,QDateTimeEdit, QDateEdit,QStyle,
                             QHBoxLayout, QPushButton, QVBoxLayout, QWidget, QShortcut, QLineEdit, QFormLayout,QMessageBox, QAction, QFileDialog, QTextEdit,QToolButton, QGraphicsRectItem, QGraphicsLineItem, QMenu, QHeaderView,QProgressDialog,
                             QDialog, QSpinBox, QGroupBox, QRadioButton, QTextBrowser, QDialogButtonBox, QProgressBar, QComboBox, QTabWidget, QGridLayout, QSlider, QScrollArea, QGraphicsView, QToolTip,QListWidgetItem, QWidgetAction, QAbstractItemView,
                             QTextBrowser, QSizePolicy, QCheckBox, QLabel, QListWidget,QGraphicsScene, QActionGroup,QGraphicsTextItem, QGraphicsPixmapItem, QGraphicsItem, QTableWidget, QTableWidgetItem, QStatusBar, QDoubleSpinBox, QFrame, QFontComboBox, QButtonGroup, QColorDialog, QTreeWidget, QTreeWidgetItem, QSplashScreen,QGraphicsPathItem, QInputDialog, QStackedWidget)
@@ -92,7 +92,7 @@ from PyQt5.QtGui import (QPixmap, QImage, QIcon, QKeyEvent,qRed, qGreen, qBlue, 
 ### AKTUELLE PROGRAMM-VERSION
 ### = GitHub‑Release‑Tag (ohne führendes 'v')
 ### ====================================================
-APP_VERSION = "2.1.0"
+APP_VERSION = "2.2.0"
 
 ### ===================================
 ### VERSIONSVERWALTUNG
@@ -293,6 +293,156 @@ FOCUS_STYLE = """
         border-radius: 8px;
     }
 """
+
+###===================================
+### SPRACHERKENNUNG (vor Config)
+###===================================
+
+# class LanguageDetector:
+#     """Erkennt die Systemsprache und findet die passende Übersetzung."""
+
+#     # Mapping von Locale-Codes zu unseren Sprachkürzeln
+#     LOCALE_TO_LANG = {
+#         # Deutsch
+#         'de': 'de', 'de_DE': 'de', 'de_AT': 'de', 'de_CH': 'de',
+#         # Englisch
+#         'en': 'en', 'en_US': 'en', 'en_GB': 'en', 'en_AU': 'en', 'en_CA': 'en',
+#         # Vietnamesisch
+#         'vi': 'vi', 'vi_VN': 'vi',
+#         # Weitere unterstützte Sprachen (für die Welcome-Nachricht)
+#         'fr': 'fr', 'fr_FR': 'fr', 'fr_CA': 'fr',
+#         'es': 'es', 'es_ES': 'es', 'es_MX': 'es',
+#         'it': 'it', 'it_IT': 'it',
+#         'pt': 'pt', 'pt_PT': 'pt', 'pt_BR': 'pt',
+#         'nl': 'nl', 'nl_NL': 'nl', 'nl_BE': 'nl',
+#         'ru': 'ru', 'ru_RU': 'ru',
+#         'ja': 'ja', 'ja_JP': 'ja',
+#         'zh': 'zh', 'zh_CN': 'zh', 'zh_TW': 'zh',
+#         'ar': 'ar', 'ar_SA': 'ar',
+#         'hi': 'hi', 'hi_IN': 'hi',
+#         'pl': 'pl', 'pl_PL': 'pl',
+#         'uk': 'uk', 'uk_UA': 'uk',
+#         'ro': 'ro', 'ro_RO': 'ro',
+#         'hu': 'hu', 'hu_HU': 'hu',
+#         'cs': 'cs', 'cs_CZ': 'cs',
+#         'sv': 'sv', 'sv_SE': 'sv',
+#         'da': 'da', 'da_DK': 'da',
+#         'fi': 'fi', 'fi_FI': 'fi',
+#         'no': 'no', 'nb_NO': 'no',
+#         'tr': 'tr', 'tr_TR': 'tr',
+#         'el': 'el', 'el_GR': 'el',
+#         'he': 'he', 'he_IL': 'he',
+#         'th': 'th', 'th_TH': 'th',
+#         'ko': 'ko', 'ko_KR': 'ko',
+#     }
+
+#     # Vollständige Sprachnamen für die Anzeige
+#     LANGUAGE_NAMES = {
+#         'de': 'Deutsch',
+#         'en': 'English',
+#         'vi': 'Tiếng Việt',
+#         'fr': 'Français',
+#         'es': 'Español',
+#         'it': 'Italiano',
+#         'pt': 'Português',
+#         'nl': 'Nederlands',
+#         'ru': 'Русский',
+#         'ja': '日本語',
+#         'zh': '中文',
+#         'ar': 'العربية',
+#         'hi': 'हिन्दी',
+#         'pl': 'Polski',
+#         'uk': 'Українська',
+#         'ro': 'Română',
+#         'hu': 'Magyar',
+#         'cs': 'Čeština',
+#         'sv': 'Svenska',
+#         'da': 'Dansk',
+#         'fi': 'Suomi',
+#         'no': 'Norsk',
+#         'tr': 'Türkçe',
+#         'el': 'Ελληνικά',
+#         'he': 'עברית',
+#         'th': 'ไทย',
+#         'ko': '한국어',
+#     }
+
+#     @staticmethod
+#     def detect_system_language():
+#         """
+#         Erkennt die Systemsprache auf verschiedenen Plattformen.
+#         Gibt einen Sprachcode zurück (z.B. 'de', 'en', 'vi').
+#         """
+#         try:
+#             # 1. Versuch: Über locale Modul
+#             import locale
+#             locale_code = locale.getdefaultlocale()[0]  # z.B. 'de_DE'
+#             if locale_code:
+#                 # Nur den ersten Teil nehmen (z.B. 'de' aus 'de_DE')
+#                 lang_code = locale_code.split('_')[0]
+#                 if lang_code in LanguageDetector.LOCALE_TO_LANG:
+#                     return LanguageDetector.LOCALE_TO_LANG[lang_code]
+#         except:
+#             pass
+
+#         # 2. Versuch: Umgebungsvariablen
+#         env_vars = ['LANG', 'LANGUAGE', 'LC_ALL', 'LC_MESSAGES']
+#         for var in env_vars:
+#             lang = os.environ.get(var, '')
+#             if lang:
+#                 # z.B. 'de_DE.UTF-8' -> 'de'
+#                 lang_code = lang.split('.')[0].split('_')[0]
+#                 if lang_code in LanguageDetector.LOCALE_TO_LANG:
+#                     return LanguageDetector.LOCALE_TO_LANG[lang_code]
+
+#         # 3. Versuch: Windows-spezifisch
+#         if platform.system() == 'Windows':
+#             try:
+#                 import ctypes
+#                 windll = ctypes.windll.kernel32
+#                 # GetUserDefaultUILanguage() gibt einen LCID zurück
+#                 lcid = windll.GetUserDefaultUILanguage()
+#                 # LCID zu Sprachcode konvertieren (vereinfacht)
+#                 # 1031 = de-DE, 1033 = en-US, 1066 = vi-VN
+#                 lcid_to_lang = {
+#                     1031: 'de', 1033: 'en', 1066: 'vi',
+#                     1036: 'fr', 3082: 'es', 1040: 'it',
+#                     2070: 'pt', 1043: 'nl', 1049: 'ru',
+#                     1041: 'ja', 2052: 'zh', 1025: 'ar',
+#                     1081: 'hi', 1045: 'pl', 1058: 'uk',
+#                     1048: 'ro', 1038: 'hu', 1029: 'cs',
+#                     1053: 'sv', 1030: 'da', 1035: 'fi',
+#                     1044: 'no', 1055: 'tr', 1032: 'el',
+#                     1037: 'he', 1054: 'th', 1042: 'ko',
+#                 }
+#                 if lcid in lcid_to_lang:
+#                     return lcid_to_lang[lcid]
+#             except:
+#                 pass
+
+#         # 4. Fallback: Englisch
+#         return 'en'
+
+#     @staticmethod
+#     def get_language_name(lang_code):
+#         """Gibt den vollständigen Sprachnamen für einen Sprachcode zurück."""
+#         return LanguageDetector.LANGUAGE_NAMES.get(lang_code, lang_code)
+
+#     @staticmethod
+#     def is_language_supported(lang_code):
+#         """Prüft ob eine Sprache verfügbar ist (als Übersetzungsdatei existiert)."""
+#         if not getattr(sys, 'frozen', False):
+#             # Entwicklungsmodus: Prüfe im translations Ordner
+#             translations_dir = os.path.join(Config.SCRIPT_DIR, 'translations')
+#         else:
+#             # Bundle-Modus: Prüfe im User-Verzeichnis
+#             user_base = Config.get_user_data_dir()
+#             if not user_base:
+#                 return False
+#             translations_dir = os.path.join(user_base, 'translations')
+
+#         translation_file = os.path.join(translations_dir, f'translations_{lang_code}.py')
+#         return os.path.exists(translation_file)
 
 ###===================================
 ### KONFIGURATION (Cross-Platform)
@@ -701,32 +851,38 @@ class Config:
     def _ask_and_update_translations_async(cls, parent=None):
         """
         Fragt den Benutzer, ob alle Übersetzungen von GitHub heruntergeladen werden sollen.
-        Bei Zustimmung wird der Download asynchron gestartet.
         """
         if not getattr(sys, 'frozen', False):
             return
 
-        # Prüfen ob Internet verfügbar ist
-        if not cls._check_internet_connection():
-            print("⚠️ Keine Internetverbindung - Übersetzungen werden nicht aktualisiert")
-            return
-
         # Prüfen ob bereits ein Download läuft
         if hasattr(cls, '_update_thread') and cls._update_thread and cls._update_thread.isRunning():
-            print("⏳ Übersetzungs-Update läuft bereits")
+            if parent:
+                myUniversalDialog(
+                    parent,
+                    title=parent.tr('translations_update_in_progress_title'),
+                    message=parent.tr('translations_update_in_progress'),
+                    buttons=[(parent.tr('btn_ok'), "primary", "ok", 100)],
+                    icon_type="",
+                    text_alignment=Qt.AlignLeft,
+                    default_button="ok"
+                ).exec_()
             return
 
         # Translations-Pfad für die Nachricht
         user_base = cls.get_user_data_dir()
         translations_path = os.path.join(user_base, 'translations') if user_base else "Unbekannt"
 
+        # Anzahl der verfügbaren Sprachen ermitteln (über parent.lang)
+        total_languages = 0
+        if parent and hasattr(parent, 'lang'):
+            total_languages = parent.lang.get_available_languages_count()
+
         # Dialog anzeigen (wenn parent übergeben)
         if parent:
-            from PyQt5.QtWidgets import QApplication
-
-            # Text mit Pfad formatieren
             message = parent.tr('ask_download_all_translations').format(
-                translations_path=translations_path
+                translations_path=translations_path,
+                total_languages=total_languages
             )
 
             dialog = myUniversalDialog(
@@ -734,8 +890,8 @@ class Config:
                 title=parent.tr('download_all_translations'),
                 message=message,
                 buttons=[
-                    (parent.tr('download_all_translations'), "primary", "ok", 500),
-                    (parent.tr('btn_cancel'), "secondary", "cancel", 200)
+                    (parent.tr('download_translations'), "primary", "ok", 160),
+                    (parent.tr('btn_cancel'), "secondary", "cancel", 120)
                 ],
                 icon_type="",
                 text_alignment=Qt.AlignLeft,
@@ -766,9 +922,12 @@ class Config:
         # Neuen Thread erstellen
         cls._update_thread = TranslationsUpdateThread(parent)
 
-        # Status-Update in der Statusleiste anzeigen (wenn parent vorhanden)
+        # Status-Update in der Statusleiste anzeigen
         if parent and hasattr(parent, 'statusBar'):
-            parent.statusBar().showMessage(parent.tr('translations_update_in_progress'), 3000)
+            parent.statusBar().showMessage(
+                parent.tr('translations_update_in_progress'),
+                3000
+            )
 
         # Signale verbinden
         cls._update_thread.progress.connect(lambda msg: print(f"📥 {msg}"))
@@ -793,15 +952,8 @@ class Config:
 
                 if parent and hasattr(parent, 'statusBar'):
                     parent.statusBar().showMessage(status_msg, 3000)
-            else:
-                # Erfolgreich aktualisiert
-                status_msg = parent.tr('translations_update_success', total_count=new_count + updated_count, new_count=new_count, updated_count=updated_count) if parent else f"{new_count + updated_count} Übersetzungen aktualisiert"
-                print(f"✅ {status_msg}")
 
-                if parent and hasattr(parent, 'statusBar'):
-                    parent.statusBar().showMessage(status_msg, 5000)
-
-                # Info-Dialog anzeigen
+                # Optional: Kurze Info-Meldung
                 if parent:
                     myUniversalDialog(
                         parent,
@@ -809,6 +961,26 @@ class Config:
                         message=status_msg,
                         buttons=[(parent.tr('btn_ok'), "success", "ok", 100)],
                         icon_type="",
+                        text_alignment=Qt.AlignLeft,
+                        default_button="ok"
+                    ).exec_()
+            else:
+                # Erfolgreich aktualisiert
+                total = new_count + updated_count
+                status_msg = parent.tr('translations_update_success', total, new_count, updated_count) if parent else f"{total} Übersetzungen aktualisiert"
+                print(f"✅ {status_msg}")
+
+                if parent and hasattr(parent, 'statusBar'):
+                    parent.statusBar().showMessage(status_msg, 5000)
+
+                # Erfolgs-Dialog
+                if parent:
+                    myUniversalDialog(
+                        parent,
+                        title=parent.tr('translations_updated'),
+                        message=status_msg,
+                        buttons=[(parent.tr('btn_ok'), "success", "ok", 100)],
+                        icon_type="success",
                         text_alignment=Qt.AlignLeft,
                         default_button="ok"
                     ).exec_()
@@ -823,15 +995,30 @@ class Config:
             # Fehler-Dialog nur bei nicht-abgebrochenen Downloads
             if not (hasattr(cls._update_thread, '_is_cancelled') and cls._update_thread._is_cancelled):
                 if parent:
-                    myUniversalDialog(
+                    # Prüfen ob es ein Internet-Problem war
+                    if "internet" in message.lower() or "connection" in message.lower():
+                        icon_type = "warning"
+                    else:
+                        icon_type = "error"
+
+                    dialog = myUniversalDialog(
                         parent,
                         title=error_msg,
                         message=f"{error_msg}\n\n{message}",
-                        buttons=[(parent.tr('btn_ok'), "danger", "ok", 100)],
-                        icon_type="error",
+                        buttons=[
+                            (parent.tr('btn_ok'), "primary", "ok", 100),
+                            (parent.tr('btn_retry'), "secondary", "retry", 100)
+                        ],
+                        icon_type=icon_type,
                         text_alignment=Qt.AlignLeft,
                         default_button="ok"
-                    ).exec_()
+                    )
+                    dialog.exec_()
+
+                    # Bei Wiederholung: nochmal versuchen
+                    if dialog.result_value == "retry":
+                        from PyQt5.QtCore import QTimer
+                        QTimer.singleShot(500, lambda: cls.manual_translations_update(parent))
 
         # Thread aufräumen
         if hasattr(cls, '_update_thread'):
@@ -839,22 +1026,59 @@ class Config:
 
     @classmethod
     def _check_internet_connection(cls):
-        """Prüft ob eine Internetverbindung besteht."""
+        """
+        Prüft ob eine Internetverbindung besteht.
+        Verwendet mehrere Methoden für höhere Zuverlässigkeit.
+        """
+        # Methode 1: Socket-Verbindung zu Google DNS
         try:
             import socket
-            socket.create_connection(("8.8.8.8", 53), timeout=3)
+            socket.setdefaulttimeout(3)
+            socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect(("8.8.8.8", 53))
             return True
-        except OSError:
-            return False
+        except:
+            pass
+
+        # Methode 2: HTTP-Request zu GitHub API (leicht)
+        try:
+            import requests
+            response = requests.get("https://api.github.com", timeout=3)
+            if response.status_code == 200:
+                return True
+        except:
+            pass
+
+        # Methode 3: Ping zu einem bekannten Server (nur Unix)
+        if platform.system() != 'Windows':
+            try:
+                import subprocess
+                result = subprocess.run(['ping', '-c', '1', '-W', '2', '8.8.8.8'],
+                                    capture_output=True, timeout=3)
+                if result.returncode == 0:
+                    return True
+            except:
+                pass
+
+        return False
 
     @classmethod
     def manual_translations_update(cls, parent=None):
         """
-        Manuelles Aktualisieren der Übersetzungen (für Menü-Eintrag).
-        Wird aufgerufen wenn der Benutzer 'Extras → Übersetzungen aktualisieren' wählt.
+        Manuelles Aktualisieren der GUI Übersetzungen.
+        Wird aufgerufen wenn der Benutzer 'Einstellungen → Übersetzungen aktualisieren' wählt.
         """
         if not getattr(sys, 'frozen', False):
-            print("ℹ️ Manuelles Update nur im Bundle-Modus verfügbar, damit aktuelle  translations mit evt. veralteten aus dem Repository überschrieben werden.")
+            print("ℹ️ Manuelles Update nur im Bundle-Modus verfügbar")
+            if parent:
+                myUniversalDialog(
+                    parent,
+                    title=parent.tr('translations_update_not_available_title'),
+                    message=parent.tr('translations_update_not_available_message'),
+                    buttons=[(parent.tr('btn_ok'), "primary", "ok", 100)],
+                    icon_type="",
+                    text_alignment=Qt.AlignLeft,
+                    default_button="ok"
+                ).exec_()
             return
 
         # Prüfen ob bereits ein Download läuft
@@ -862,7 +1086,7 @@ class Config:
             if parent:
                 myUniversalDialog(
                     parent,
-                    title=parent.tr('translations_update_in_progress'),
+                    title=parent.tr('translations_update_in_progress_title'),
                     message=parent.tr('translations_update_in_progress'),
                     buttons=[(parent.tr('btn_ok'), "primary", "ok", 100)],
                     icon_type="",
@@ -871,7 +1095,35 @@ class Config:
                 ).exec_()
             return
 
-        # Dialog anzeigen
+        # ----- INTERNETVERBINDUNG PRÜFEN (MIT USER-FEEDBACK) -----
+        if not cls._check_internet_connection():
+            print("⚠️ Keine Internetverbindung - Übersetzungen können nicht aktualisiert werden")
+
+            if parent:
+                # Detaillierte Fehlermeldung mit Lösungsvorschlägen
+                message = parent.tr('translations_update_no_internet_message')
+                dialog = myUniversalDialog(
+                    parent,
+                    title=parent.tr('translations_update_no_internet_title'),
+                    message=message,
+                    buttons=[
+                        (parent.tr('btn_ok'), "primary", "ok", 100),
+                        (parent.tr('btn_retry'), "secondary", "retry", 100)
+                    ],
+                    icon_type="warning",
+                    text_alignment=Qt.AlignLeft,
+                    default_button="ok"
+                )
+                dialog.exec_()
+
+                # Bei Wiederholung: nochmal versuchen
+                if dialog.result_value == "retry":
+                    # Rekursiver Aufruf (aber mit kurzer Verzögerung um Rekursion zu vermeiden)
+                    from PyQt5.QtCore import QTimer
+                    QTimer.singleShot(500, lambda: cls.manual_translations_update(parent))
+            return
+
+        # Dialog für Download anzeigen
         cls._ask_and_update_translations_async(parent)
 
     @classmethod
@@ -17095,7 +17347,7 @@ class TextTemplateDialog(QDialog):
         max_dialog_width  = int(screen_geometry.width()  * 0.9)   # 90% der verfügbaren Breite
 
         self.setWindowTitle(self.lang.tr('text_input'))
-        self.setMinimumSize(900, 700)                     # kleinerer Startwert, kein Zwang
+        self.setMinimumSize(1000, 700)                     # kleinerer Startwert, kein Zwang
         self.setMaximumSize(max_dialog_width, max_dialog_height)
         self.setSizeGripEnabled(True)                     # erlaubt manuelles Nachziehen
 
@@ -20544,7 +20796,7 @@ class SignatureSettingsDialog(QDialog):
                 (self.lang.tr('btn_ok'), "success", "ok"),
                 (self.lang.tr('btn_cancel'), "danger", "cancel")
             ],
-            icon_type="question",
+            icon_type="",
             voice_message=self.lang.tr('signature_name_voice'),
             text_alignment=Qt.AlignLeft,
             input_fields=[
@@ -25193,9 +25445,119 @@ def get_sort_key(lang_code):
 class Language:
     def __init__(self):
         settings = QSettings("BinhDiez", "PDFDarkView")
-        self.current_lang = settings.value("language", "de")
-        self.available = {}          # code -> {'dict': wb, 'name': anzeigename, 'flag': flagge, 'sort_name': sortiername}
+
+        # 1. Systemsprache erkennen (für den Fall dass keine gespeicherte Sprache existiert)
+        self._system_lang = self._detect_system_language()
+        print(f"🌍 Systemsprache erkannt: {self._system_lang}")
+
+        # 2. Gespeicherte Sprache laden
+        saved_lang = settings.value("language", None)
+
+        # 3. Entscheiden welche Sprache verwendet wird
+        if saved_lang is not None:
+            # Gespeicherte Sprache hat Vorrang
+            self.current_lang = saved_lang
+            print(f"📁 Verwende gespeicherte Sprache: {self.current_lang}")
+        else:
+            # Keine gespeicherte Sprache → Systemsprache verwenden
+            self.current_lang = self._system_lang
+            print(f"🆕 Verwende Systemsprache (keine gespeicherte): {self.current_lang}")
+
+        self.available = {}
         self._load_all_strings()
+
+        # Falls die gewählte Sprache nicht verfügbar ist: auf Deutsch oder Englisch fallen
+        if self.current_lang not in self.available:
+            print(f"⚠️ Sprache {self.current_lang} nicht verfügbar.")
+            if 'de' in self.available:
+                self.current_lang = 'de'
+                print(f"  → Fallback auf Deutsch")
+            elif 'en' in self.available:
+                self.current_lang = 'en'
+                print(f"  → Fallback auf Englisch")
+            else:
+                print("❌ KRITISCH: Weder Deutsch noch Englisch verfügbar!")
+                self.current_lang = None
+
+    def _detect_system_language(self):
+        """Erkennt die Systemsprache auf verschiedenen Plattformen."""
+        try:
+            # 1. Versuch: locale Modul
+            import locale
+            locale_code = locale.getdefaultlocale()[0]
+            if locale_code:
+                lang_code = locale_code.split('_')[0]
+                if lang_code in LANGUAGE_INFO:
+                    return lang_code
+        except:
+            pass
+
+        # 2. Versuch: Umgebungsvariablen
+        env_vars = ['LANG', 'LANGUAGE', 'LC_ALL', 'LC_MESSAGES']
+        for var in env_vars:
+            lang = os.environ.get(var, '')
+            if lang:
+                lang_code = lang.split('.')[0].split('_')[0]
+                if lang_code in LANGUAGE_INFO:
+                    return lang_code
+
+        # 3. Versuch: Windows-spezifisch
+        if platform.system() == 'Windows':
+            try:
+                import ctypes
+                windll = ctypes.windll.kernel32
+                lcid = windll.GetUserDefaultUILanguage()
+                lcid_to_lang = {
+                    1031: 'de', 1033: 'en', 1066: 'vi',
+                    1036: 'fr', 3082: 'es', 1040: 'it',
+                    2070: 'pt', 1043: 'nl', 1049: 'ru',
+                    1041: 'ja', 2052: 'zh', 1025: 'ar',
+                    1081: 'hi', 1045: 'pl', 1058: 'uk',
+                    1048: 'ro', 1038: 'hu', 1029: 'cs',
+                    1053: 'sv', 1030: 'da', 1035: 'fi',
+                    1044: 'no', 1055: 'tr', 1032: 'el',
+                    1037: 'he', 1054: 'th', 1042: 'ko',
+                }
+                if lcid in lcid_to_lang:
+                    return lcid_to_lang[lcid]
+            except:
+                pass
+
+        # Fallback: Deutsch
+        print("⚠️ Keine Systemsprache erkannt, verwende Deutsch als Fallback")
+        return 'de'
+
+    def get_system_language(self):
+        """Gibt die erkannte Systemsprache zurück."""
+        return self._system_lang
+
+    def get_available_languages_count(self):
+        """Gibt die Anzahl der verfügbaren Sprachen zurück."""
+        return len(self.available)
+
+    def get_language_file_path(self, lang_code):
+        """Gibt den Pfad zur Sprachdatei zurück."""
+        # Durchsucht die Pfade nach der Datei
+        for path in self._get_search_paths():
+            file_path = os.path.join(path, f'translations_{lang_code}.py')
+            if os.path.exists(file_path):
+                return file_path
+        return None
+
+    def get_translations_dir(self):
+        """Gibt das translations-Verzeichnis zurück (für die Fehlermeldung)."""
+        for path in self._get_search_paths():
+            if os.path.isdir(path):
+                # Prüfen ob es das User-Verzeichnis ist
+                if getattr(sys, 'frozen', False):
+                    user_dir = Config.get_user_data_dir()
+                    if user_dir and path.startswith(user_dir):
+                        return path
+        # Fallback: erstes gefundenes Verzeichnis
+        for path in self._get_search_paths():
+            if os.path.isdir(path):
+                return path
+        return "Unbekannt"
 
     def _get_search_paths(self):
         paths = []
@@ -31875,19 +32237,57 @@ def get_predefined_ocr_options():
 ### eigenen Dialoge als Ersatz für QMessageBox und QInputDialog
 ###============================================================
 """Beispiel:
-    dialog = myUniversalDialog(
+    # ====================================================
+    # BEISPIEL ALLE FEATURES KOMBINIERT (Maximal-Variante)
+    # ====================================================
+
+        dialog = myUniversalDialog(
         parent,
-        "Support",
-        "Fehlerbericht: <b>Critical Error</b><br>"
-        "Mehr Details: <a href='https://support.example.com'>Support-Seite</a>",
-        buttons=[("OK", "primary", "accept")],
-        selectable_text=True,
-        show_copy_button=True
+        "Konfiguration",
+        "Bitte konfigurieren Sie <a href='https://example.com'>die Einstellungen</a>",
+        buttons=[
+            ("Speichern", "success", "save"),
+            ("Abbrechen", "danger", "cancel"),
+            ("Hilfe", "primary", "help")
+        ],
+        icon_type="info",                                # Icon anzeigen
+        default_button="save",                           # Vorauswahl
+        text_alignment=Qt.AlignLeft,                     # Linksbündig
+        selectable_text=True,                            # Text markierbar
+        show_copy_button=True,                           # Copy-Button
+        voice_message="Bitte konfigurieren Sie die Einstellungen",
+        input_fields=[
+            {"type": "text", "name": "username", "label": "Benutzername:",
+            "placeholder": "max.mustermann"},
+            {"type": "number", "name": "port", "label": "Port:",
+            "min": 1, "max": 65535, "default": 8080},
+            {"type": "date", "name": "startdate", "label": "Startdatum:",
+            "default": QDate.currentDate()},
+            {"type": "combobox", "name": "language", "label": "Sprache:",
+            "items": ["Deutsch", "Englisch", "Französisch"]}
+        ]
     )
 
-"""
+    if dialog.exec_() == QDialog.Accepted:
+        if dialog.result_value == "save":
+            values = dialog.get_input_values()
+            print(f"Alle Werte: {values}")
 
-# Version mit optionalem Eingabefeld
+
+    Verfügbare Button-Actions:
+
+    · Accept: yes, ok, accept, no, open, save, continue, retry, apply, install, exit, restart
+    · Reject: cancel, close, abort, reject
+
+    Verfügbare Icon-Typen:
+
+    · warning, error, question, info, success
+
+    Verfügbare Button-Styles:
+
+    · primary (Blau), success (Grün), danger (Rot), warning (Orange), dark (Dunkelgrau)
+"""
+# Original
 class myUniversalDialog(QDialog):
     """Eigene MessageBox mit Logo, App-Icon, gestylten Buttons und Sprachausgabe
     Automatische Zahlenkonvertierung in der Sprachausgabe!
@@ -31991,7 +32391,7 @@ class myUniversalDialog(QDialog):
             parent: Eltern-Widget
             title: Dialog-Titel
             message: Nachricht (kann HTML mit Links enthalten)
-            buttons: Liste von Buttons [(Text, Style, Action, min_width)]
+            buttons: Liste von Buttons [(Text, Style, Action)]
             icon_type: Icon-Typ (warning, error, question, info, success)
             voice_message: Text für Sprachausgabe
             default_button: Standard-Button (Action-Name)
@@ -32037,13 +32437,13 @@ class myUniversalDialog(QDialog):
 
         self.voice_enabled = self._get_voice_enabled()
 
-        # 3. BUTTON STYLE INITIALISIEREN
+        # 3. BUTTON STYLE INITIALISIEREN (NUR FARBEN, KEINE FESTEN BREITEN!)
         self.init_button_style()
 
         # 4. UI AUFBAUEN
         self.init_ui(title, message, buttons, icon_type)
 
-        # 5. DARK MODE ANWENDEN (NUR HIER!)
+        # 5. DARK MODE ANWENDEN
         self._apply_ultimate_dark_mode()
 
         # 6. DEFAULT BUTTON FOKUS
@@ -32058,11 +32458,12 @@ class myUniversalDialog(QDialog):
         """Baut NUR die UI auf - KEIN Dark Mode hier! Dark Mode wird in __init__ angewendet."""
         self.setWindowTitle(self.lang.tr('app_title_format', title))
         self.setMinimumWidth(400)
-        self.setMaximumWidth(1600)
+        # 🔥 KEINE MAXIMUM WIDTH MEHR - Dialog wächst mit Buttons
+        # self.setMaximumWidth(1600)  # <- ENTFERNT!
         self.setFocusPolicy(Qt.StrongFocus)
 
         main_layout = QVBoxLayout()
-        main_layout.setContentsMargins(10, 5, 10, 10)
+        main_layout.setContentsMargins(15, 10, 15, 15)  # Etwas mehr Platz
 
         # ===== HEADER =====
         header = QWidget()
@@ -32077,7 +32478,14 @@ class myUniversalDialog(QDialog):
             header_layout.addWidget(logo, 1, Qt.AlignCenter | Qt.AlignVCenter)
 
         title_label = QLabel(f"{title}")
-        title_label.setStyleSheet("font-size: 22px; font-weight: bold;")
+        title_label.setStyleSheet("""
+            QLabel {
+                color: #E0E0E0;
+                font-size: 22px;
+                font-weight: bold;
+                padding: 5px;
+            }
+            """)
         header_layout.addWidget(title_label, 1, Qt.AlignCenter)
 
         if os.path.exists(Config.APP_ICON_PATH):
@@ -32091,8 +32499,10 @@ class myUniversalDialog(QDialog):
         # ===== SCROLL AREA FÜR MESSAGE =====
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
-        scroll_area.setMaximumHeight(400)
+        scroll_area.setMinimumHeight(200)
+        scroll_area.setMaximumHeight(500)
         scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         scroll_area.setStyleSheet("""
             QScrollArea {
                 border: none;
@@ -32115,22 +32525,13 @@ class myUniversalDialog(QDialog):
 
         msg_container = QWidget()
         msg_layout = QVBoxLayout(msg_container)
-
-        if self.text_alignment == Qt.AlignLeft:
-            msg_layout.setContentsMargins(20, 5, 20, 5)
-        else:
-            msg_layout.setContentsMargins(20, 5, 20, 5)
+        msg_layout.setContentsMargins(20, 5, 20, 5)
 
         # ===== ICON =====
         if icon_type and icon_type != "":
             icon_label = QLabel()
-            icon_colors = {
-                "warning": "#FF9800",
-                "error": "#F44336",
-                "question": "#2196F3",
-                "info": "#2196F3",
-                "success": "#4CAF50"
-            }
+            icon_label.setAlignment(Qt.AlignCenter)
+
             icon_texts = {
                 "warning": "⚠️",
                 "error": "❌",
@@ -32138,36 +32539,46 @@ class myUniversalDialog(QDialog):
                 "info": "ℹ️",
                 "success": "✅"
             }
-            if icon_type in icon_texts:
-                icon_label.setText(icon_texts[icon_type])
-                icon_label.setStyleSheet(f"font-size: 40px; color: {icon_colors[icon_type]}; background-color: transparent;")
-                icon_label.setAlignment(Qt.AlignCenter)
-                msg_layout.addWidget(icon_label)
 
-        # ===== MESSAGE BEREICH (MIT LINK- UND KOPIER-UNTERSTÜTZUNG) =====
+            icon_colors = {
+                "warning": "#FF9800",
+                "error": "#F44336",
+                "question": "#2196F3",
+                "info": "#2196F3",
+                "success": "#4CAF50"
+            }
+
+            icon_label.setText(icon_texts.get(icon_type, "ℹ️"))
+            icon_label.setStyleSheet(f"""
+                font-size: 48px;
+                background-color: transparent;
+                color: {icon_colors.get(icon_type, "#E0E0E0")};
+            """)
+
+            msg_layout.addWidget(icon_label)
+
+        # ===== MESSAGE =====
         if self.selectable_text or self.show_copy_button:
-            # Container für Message + Copy-Button
             msg_container_widget = QWidget()
             msg_container_layout = QVBoxLayout(msg_container_widget)
             msg_container_layout.setContentsMargins(0, 0, 0, 0)
             msg_container_layout.setSpacing(5)
 
-            # Message mit QTextEdit für bessere Kopierfunktionen
             if self.selectable_text:
                 self.msg_edit = QTextEdit()
-                # Prüfen ob HTML enthalten ist
-                if "<" in message and ">" in message and ("<a " in message or "href=" in message):
-                    msg_html = message.replace('\n', '<br>')   #
-                    self.msg_edit.setHtml(message)
+
+                if "<a " in message:
+                    fixed_message = self._fix_html_links(message)
+                    self.msg_edit.setHtml(fixed_message)
                 else:
                     self.msg_edit.setPlainText(message)
+
                 self.msg_edit.setReadOnly(True)
                 self.msg_edit.setObjectName("messageEdit")
                 self.msg_edit.setFrameStyle(QFrame.NoFrame)
                 self.msg_edit.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
                 self.msg_edit.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-                self.msg_edit.setMinimumHeight(50)
-                self.msg_edit.setMaximumHeight(300)
+                self.msg_edit.setMinimumHeight(100)
                 self.msg_edit.setStyleSheet("""
                     QTextEdit#messageEdit {
                         background-color: #3D3D3D;
@@ -32175,14 +32586,18 @@ class myUniversalDialog(QDialog):
                         border: 1px solid #555555;
                         border-radius: 4px;
                         padding: 10px;
-                        font-size: 14px;
+                        font-size: 16px;
                     }
                 """)
-                # Rechtsklick-Menü mit Kopieren ist automatisch verfügbar
+
                 msg_container_layout.addWidget(self.msg_edit)
             else:
-                # Standard QLabel (nur anzeigen, nicht auswählbar)
-                self.msg_label = QLabel(message)
+                if "<a " in message:
+                    fixed_message = self._fix_html_links(message)
+                else:
+                    fixed_message = message
+
+                self.msg_label = QLabel(fixed_message)
                 self.msg_label.setWordWrap(True)
                 self.msg_label.setObjectName("messageLabel")
                 self.msg_label.setStyleSheet("""
@@ -32193,9 +32608,12 @@ class myUniversalDialog(QDialog):
                         background-color: transparent;
                     }
                 """)
+
+                self.msg_label.setTextFormat(Qt.RichText)
+                self.msg_label.setOpenExternalLinks(True)
+
                 msg_container_layout.addWidget(self.msg_label)
 
-            # Copy-Button
             if self.show_copy_button:
                 copy_btn = QPushButton("📋 Text kopieren")
                 copy_btn.setObjectName("copyButton")
@@ -32217,7 +32635,6 @@ class myUniversalDialog(QDialog):
                 """)
                 copy_btn.clicked.connect(self._copy_text_to_clipboard)
 
-                # Button rechtsbündig ausrichten
                 button_layout = QHBoxLayout()
                 button_layout.addStretch()
                 button_layout.addWidget(copy_btn)
@@ -32225,19 +32642,14 @@ class myUniversalDialog(QDialog):
 
             msg_layout.addWidget(msg_container_widget)
         else:
-            # Standard QLabel ohne Extras
-            # Standard QLabel ohne Extras
-            # Bei HTML-Nachrichten Zeilenumbrüche in <br> umwandeln
-            if "<a " in message or "href=" in message:
-                display_message = message.replace('\n', '<br>')
-                self.msg_label = QLabel(display_message)
-                self.msg_label.setTextFormat(Qt.RichText)
-                self.msg_label.setOpenExternalLinks(True)
+            if "<a " in message:
+                fixed_message = self._fix_html_links(message)
             else:
-                self.msg_label = QLabel(message)
+                fixed_message = message
+
+            self.msg_label = QLabel(fixed_message)
             self.msg_label.setWordWrap(True)
             self.msg_label.setObjectName("messageLabel")
-
             self.msg_label.setStyleSheet("""
                 QLabel#messageLabel {
                     font-size: 16px;
@@ -32246,6 +32658,9 @@ class myUniversalDialog(QDialog):
                     background-color: transparent;
                 }
             """)
+
+            self.msg_label.setTextFormat(Qt.RichText)
+            self.msg_label.setOpenExternalLinks(True)
 
             if self.text_alignment == Qt.AlignLeft:
                 self.msg_label.setAlignment(Qt.AlignLeft | Qt.AlignTop)
@@ -32259,7 +32674,7 @@ class myUniversalDialog(QDialog):
         if self.input_fields:
             separator = QFrame()
             separator.setFrameShape(QFrame.HLine)
-            separator.setStyleSheet("background-color: #555555; margin: 10px 20px;")
+            separator.setStyleSheet("background-color: #555555; margin: 10px 0px;")
             msg_layout.addWidget(separator)
 
             for field_config in self.input_fields:
@@ -32270,20 +32685,39 @@ class myUniversalDialog(QDialog):
         scroll_area.setWidget(msg_container)
         main_layout.addWidget(scroll_area)
 
-        # ===== BUTTONS =====
+        # ===== BUTTONS (MIT DYNAMISCHER BREITE UND GRÖSSERER HÖHE) =====
         button_widget = QWidget()
         button_layout = QHBoxLayout(button_widget)
         button_layout.setSpacing(15)
+        button_layout.setContentsMargins(10, 10, 10, 10)  # Mehr Platz für Buttons
 
         self.default_button_widget = None
         self.button_widgets = []
 
         button_defs = buttons if buttons is not None else self.buttons
 
+        # 🔥 ERSTE: Maximale Button-Breite berechnen für gleichmäßige Verteilung
+        max_button_width = 0
+        for button_def in button_defs:
+            if len(button_def) >= 3:
+                text = button_def[0]
+                # Temporären Button für Text-Messung
+                temp_btn = QPushButton(text)
+                font = temp_btn.font()
+                metrics = QFontMetrics(font)
+                text_width = metrics.horizontalAdvance(text)
+                padding = 50  # Mehr Padding für größere Buttons
+                width = text_width + padding
+                max_button_width = max(max_button_width, width)
+
+        # Begrenze maximale Breite auf 400px (nicht zu breit)
+        max_button_width = min(max_button_width, 400)
+        # Mindestbreite 100px
+        max_button_width = max(max_button_width, 100)
+
         for i, button_def in enumerate(button_defs):
             if len(button_def) == 3:
                 text, style_type, action = button_def
-                min_width = None
             elif len(button_def) == 4:
                 text, style_type, action, min_width = button_def
             else:
@@ -32296,7 +32730,8 @@ class myUniversalDialog(QDialog):
 
             is_default = (self.default_button == action or (i == 0 and not self.default_button))
 
-            self.style_button(btn, style_type, (120, 25), is_default, min_width)
+            # 🔥 GRÖSSERE BUTTONS: Höhe 40px (statt 35)
+            self.style_button(btn, style_type, (max_button_width, 40), is_default)
 
             btn.clicked.connect(lambda checked, r=action: self.handle_button(r))
 
@@ -32310,28 +32745,21 @@ class myUniversalDialog(QDialog):
         main_layout.addWidget(button_widget)
         self.setLayout(main_layout)
 
-        # ===== NUR: Button-Höhe erzwingen (kein Dark Mode!) =====
-        self.setStyleSheet(self.styleSheet() + """
-            QPushButton {
-                min-height: 25px;
-                max-height: 25px;
-                height: 25px;
-                padding: 0px 12px;
-            }
-        """)
+        # 🔥 DIALOG GRÖSSE ANPASSEN: Nach dem Layout die minimale Breite setzen
+        self.adjustSize()
 
     def init_button_style(self):
-        """Button-Styles initialisieren"""
+        """Button-Styles initialisieren - NUR FARBEN, KEINE FESTEN BREITEN!"""
         self.button_styles = {
-            'primary': {'bg': "#1565C0", 'hover': "#0d47a1", 'min_width': 100, 'max_width': 400},
-            'success': {'bg': "#2E7D32", 'hover': "#1B5E20", 'min_width': 100, 'max_width': 400},
-            'danger': {'bg': "#C62828", 'hover': "#8E0000", 'min_width': 100, 'max_width': 400},
-            'warning': {'bg': "#FF8a65", 'hover': "#F57C00", 'min_width': 100, 'max_width': 400},
-            'dark': {'bg': "#4a4a4a", 'hover': "#333333", 'min_width': 100, 'max_width': 400}
+            'primary': {'bg': "#1565C0", 'hover': "#0d47a1"},
+            'success': {'bg': "#2E7D32", 'hover': "#1B5E20"},
+            'danger': {'bg': "#C62828", 'hover': "#8E0000"},
+            'warning': {'bg': "#FF8a65", 'hover': "#F57C00"},
+            'dark': {'bg': "#4a4a4a", 'hover': "#333333"}
         }
 
     def style_button(self, button, style_type, custom_size=None, is_default=False, min_width=None):
-        """Stylet einen einzelnen Button"""
+        """Stylet einen einzelnen Button mit DYNAMISCHER Breite und größerer Höhe"""
         style = self.button_styles.get(style_type, self.button_styles['primary'])
 
         focus_border = "3px solid #FFFFFF"
@@ -32342,47 +32770,56 @@ class myUniversalDialog(QDialog):
             font-weight: bold;
             color: white;
             background-color: {style['bg']};
-            border-radius: 8px;
-            padding: 6px 12px;
-            min-height: 15px;
+            border-radius: 10px;  /* Etwas runder für größere Buttons */
+            padding: 8px 16px;    /* Mehr Padding für größere Buttons */
+            min-height: 20px;
             border: none;
-            margin: 2px;
+            margin: 3px;
+            font-size: 14px;      /* Etwas größere Schrift */
         }}
         QPushButton:hover {{
             background-color: {style['hover']};
         }}
         QPushButton:focus {{
             border: {focus_border};
-            border-radius: 8px;
+            border-radius: 10px;
             background-color: {style['hover']};
             padding: {focus_padding};
         }}
         QPushButton:pressed {{
             background-color: {style['hover']};
-            padding-top: 7px;
-            padding-left: 7px;
+            padding-top: 9px;
+            padding-left: 9px;
         }}
         """
 
         button.setStyleSheet(style_sheet)
 
-        eff_min_width = min_width if min_width is not None else style.get('min_width', 80)
-        eff_max_width = max(style.get('max_width', 260), eff_min_width)
-
-        width = self._calculate_button_width(button, min_width=eff_min_width, max_width=eff_max_width)
-        button.setFixedWidth(width)
-
+        # 🔥 DYNAMISCHE BREITE mit übergebenem Wert
         if custom_size:
-            button.setFixedHeight(custom_size[1])
+            width = custom_size[0]
+            height = custom_size[1]
+            button.setFixedWidth(width)
+            button.setFixedHeight(height)
         else:
-            button.setFixedHeight(20)
+            # Fallback: Berechne selbst
+            font = button.font()
+            metrics = QFontMetrics(font)
+            text_width = metrics.horizontalAdvance(button.text())
+            padding = 60
+            width = max(100, min(text_width + padding, 500))
+            button.setFixedWidth(width)
+            button.setFixedHeight(40)  # Standard-Höhe 40px
 
-    def _calculate_button_width(self, button, min_width=80, max_width=260):
-        """Berechnet die optimale Button-Breite"""
+    def _calculate_button_width(self, button, min_width=60, max_width=400):
+        """
+        Berechnet die optimale Button-Breite anhand des Textes
+        (wie im alten Dialog)
+        """
         font = button.font()
         metrics = QFontMetrics(font)
         text_width = metrics.horizontalAdvance(button.text())
-        padding = 36
+        padding = 60  # Padding links + rechts + Sicherheitsreserve
         width = text_width + padding
         return max(min_width, min(width, max_width))
 
@@ -32398,7 +32835,7 @@ class myUniversalDialog(QDialog):
 
         if label_text:
             label = QLabel(label_text)
-            label.setStyleSheet("font-weight: bold; margin-top: 5px;")
+            label.setStyleSheet("font-weight: bold; margin-top: 5px; font-size: 16px; color: #E0E0E0;")
             layout.addWidget(label)
 
         if field_type == 'text':
@@ -32408,6 +32845,7 @@ class myUniversalDialog(QDialog):
             placeholder = field_config.get('placeholder', '')
             if placeholder:
                 widget.setPlaceholderText(placeholder)
+            widget.setStyleSheet("font-size: 16px;")
             layout.addWidget(widget)
 
         elif field_type == 'number':
@@ -32416,6 +32854,7 @@ class myUniversalDialog(QDialog):
             widget.setMaximum(field_config.get('max', 999999))
             default = field_config.get('default', 0)
             widget.setValue(int(default))
+            widget.setStyleSheet("font-size: 16px;")
             layout.addWidget(widget)
 
         elif field_type == 'date':
@@ -32426,6 +32865,7 @@ class myUniversalDialog(QDialog):
             if isinstance(default, str):
                 default = QDate.fromString(default, "dd.MM.yyyy")
             widget.setDate(default)
+            widget.setStyleSheet("font-size: 16px;")
             layout.addWidget(widget)
 
         elif field_type == 'combobox':
@@ -32437,6 +32877,7 @@ class myUniversalDialog(QDialog):
                 widget.setCurrentText(default)
             elif items:
                 widget.setCurrentIndex(0)
+            widget.setStyleSheet("font-size: 16px;")
             layout.addWidget(widget)
 
         self.input_widgets[field_name] = widget
@@ -32470,6 +32911,7 @@ class myUniversalDialog(QDialog):
                     border: 1px solid #555555;
                     border-radius: 4px;
                     padding: 5px;
+                    font-size: 16px;
                 }
             """)
 
@@ -32487,6 +32929,7 @@ class myUniversalDialog(QDialog):
                 QTextEdit {
                     color: #E0E0E0 !important;
                     background-color: #3D3D3D;
+                    font-size: 16px;
                 }
             """)
 
@@ -32521,6 +32964,7 @@ class myUniversalDialog(QDialog):
             QLabel, QLabel * {
                 color: #E0E0E0 !important;
                 background-color: transparent;
+                font-size: 16px;
             }
             QLineEdit, QSpinBox, QDateEdit, QComboBox {
                 background-color: #3D3D3D;
@@ -32530,6 +32974,7 @@ class myUniversalDialog(QDialog):
                 padding: 5px;
                 selection-background-color: #1565C0;
                 selection-color: #FFFFFF;
+                font-size: 16px;
             }
             QLineEdit:focus, QSpinBox:focus, QDateEdit:focus, QComboBox:focus {
                 border: 2px solid #1565C0;
@@ -32546,6 +32991,7 @@ class myUniversalDialog(QDialog):
                 border: 1px solid #555555;
                 border-radius: 4px;
                 padding: 5px;
+                font-size: 16px;
             }
             QScrollArea, QScrollArea * {
                 background-color: transparent;
@@ -32577,7 +33023,7 @@ class myUniversalDialog(QDialog):
             child.setPalette(self.palette())
 
             if isinstance(child, QLabel):
-                child.setStyleSheet("QLabel { color: #E0E0E0 !important; background-color: transparent; }")
+                child.setStyleSheet("QLabel { color: #E0E0E0 !important; background-color: transparent; font-size: 16px; }")
             elif isinstance(child, QTextEdit):
                 child.setStyleSheet("""
                     QTextEdit {
@@ -32586,6 +33032,7 @@ class myUniversalDialog(QDialog):
                         border: 1px solid #555555;
                         border-radius: 4px;
                         padding: 5px;
+                        font-size: 16px;
                     }
                 """)
             elif isinstance(child, (QLineEdit, QSpinBox, QDateEdit)):
@@ -32596,6 +33043,7 @@ class myUniversalDialog(QDialog):
                         border: 1px solid #555555;
                         border-radius: 4px;
                         padding: 5px;
+                        font-size: 16px;
                     }
                 """)
             elif isinstance(child, QComboBox):
@@ -32606,6 +33054,7 @@ class myUniversalDialog(QDialog):
                         border: 1px solid #555555;
                         border-radius: 4px;
                         padding: 5px;
+                        font-size: 16px;
                     }
                     QComboBox QAbstractItemView {
                         background-color: #3D3D3D;
@@ -32622,10 +33071,10 @@ class myUniversalDialog(QDialog):
     def _ensure_critical_widgets_visible(self):
         """Stellt explizit die Sichtbarkeit für kritische Widgets sicher"""
         for widget in self.findChildren(QLabel):
-            widget.setStyleSheet(widget.styleSheet() + " QLabel { color: #E0E0E0 !important; background-color: transparent; }")
+            widget.setStyleSheet(widget.styleSheet() + " QLabel { color: #E0E0E0 !important; background-color: transparent; font-size: 16px; }")
 
         for widget in self.findChildren(QTextEdit):
-            widget.setStyleSheet(widget.styleSheet() + " QTextEdit { color: #E0E0E0 !important; background-color: #3D3D3D; }")
+            widget.setStyleSheet(widget.styleSheet() + " QTextEdit { color: #E0E0E0 !important; background-color: #3D3D3D; font-size: 16px; }")
 
         for widget in self.input_widgets.values():
             if isinstance(widget, (QLineEdit, QSpinBox, QDateEdit, QComboBox)):
@@ -32633,6 +33082,7 @@ class myUniversalDialog(QDialog):
                     QLineEdit, QSpinBox, QDateEdit, QComboBox {
                         color: #E0E0E0 !important;
                         background-color: #3D3D3D;
+                        font-size: 16px;
                     }
                 """)
 
@@ -32645,7 +33095,6 @@ class myUniversalDialog(QDialog):
         """Kopiert den Dialog-Text in die Zwischenablage"""
         text_to_copy = self.message
 
-        # Wenn QTextEdit verwendet wird, den aktuellen Inhalt nehmen
         if self.msg_edit is not None:
             text_to_copy = self.msg_edit.toPlainText()
         elif self.msg_label is not None:
@@ -32654,32 +33103,8 @@ class myUniversalDialog(QDialog):
         clipboard = QApplication.clipboard()
         clipboard.setText(text_to_copy)
 
-        # Optional: Feedback geben
         if hasattr(self, 'main_window') and hasattr(self.main_window, 'say'):
             self.main_window.say("Text wurde in die Zwischenablage kopiert")
-
-    def _handle_link_click(self, link):
-        """Behandelt Klicks auf Links (für erweiterte Kontrolle)"""
-        if link.startswith("http"):
-            QDesktopServices.openUrl(QUrl(link))
-        elif link.startswith("file:"):
-            QDesktopServices.openUrl(QUrl(link))
-        elif link.startswith("action:"):
-            action = link.replace("action:", "")
-            self._handle_custom_action(action)
-        else:
-            QDesktopServices.openUrl(QUrl(link))
-
-    def _handle_custom_action(self, action):
-        """Behandelt benutzerdefinierte Aktionen"""
-        if action == "open_settings":
-            # Beispiel: Einstellungen öffnen
-            pass
-        elif action == "show_help":
-            # Beispiel: Hilfe anzeigen
-            pass
-
-    # ===== WEITERE METHODEN =====
 
     def _convert_numbers_in_text(self, text):
         """Konvertiert Zahlen in Text für Sprachausgabe"""
@@ -32691,6 +33116,57 @@ class myUniversalDialog(QDialog):
             return NumberToWords.convert(num, self.lang.current_lang)
 
         return re.sub(r'\b\d+\b', replace_number, text)
+
+    def _fix_html_links(self, html_text):
+        """
+        Korrigiert automatisch ALLE HTML-Links im Text.
+        - Stellt sicher dass href vorhanden ist
+        - Macht Links sichtbar (blaue Farbe, unterstrichen)
+        - Lässt den restlichen Text unverändert (bleibt weiß)
+        """
+        if not html_text or not ("<a " in html_text):
+            return html_text
+
+        import re
+
+        def fix_link(match):
+            full_tag = match.group(0)
+
+            # Prüfe ob href bereits existiert
+            if 'href=' in full_tag:
+                # Entferne alle style Attribute die die Sichtbarkeit beeinträchtigen
+                full_tag = re.sub(r'style="[^"]*"', '', full_tag)
+                # Füge neuen style für Links hinzu (blau, unterstrichen)
+                full_tag = full_tag.replace('>', ' style="color:#4FC3F7; text-decoration:underline;">')
+                return full_tag
+            else:
+                # Kein href - versuche den Link aus dem Text zu extrahieren
+                content_match = re.search(r'<a[^>]*>(.*?)</a>', full_tag, re.DOTALL)
+                if content_match:
+                    link_text = content_match.group(1).strip()
+                    # Prüfe ob es eine URL ist
+                    if link_text and ('http' in link_text or 'www' in link_text or 'github' in link_text):
+                        # Korrekter Link mit href
+                        return f'<a href="{link_text}" style="color:#4FC3F7; text-decoration:underline;">{link_text}</a>'
+                # Fallback: Tag unverändert lassen
+                return full_tag
+
+        # Regex für alle <a> Tags
+        pattern = r'<a[^>]*>(.*?)</a>'
+        fixed_html = re.sub(pattern, fix_link, html_text, flags=re.DOTALL)
+
+        return fixed_html
+
+    def _handle_link_click(self, link):
+        """Behandelt Klicks auf Links (für erweiterte Kontrolle)"""
+        if link and link.toString():
+            url = link.toString()
+            if url.startswith("http") or url.startswith("https"):
+                QDesktopServices.openUrl(QUrl(url))
+            elif url.startswith("file:"):
+                QDesktopServices.openUrl(QUrl(url))
+            else:
+                QDesktopServices.openUrl(QUrl(url))
 
     def _find_main_window(self, widget):
         """Findet das Hauptfenster"""
@@ -32816,26 +33292,20 @@ class myUniversalDialog(QDialog):
             self.reject()
             self.closed.emit()
 
-        # ENTER Taste
         elif event.key() in (Qt.Key_Return, Qt.Key_Enter):
             current_focused = self.focusWidget()
 
-            # Wenn ein Eingabefeld fokussiert ist
             if isinstance(current_focused, (QLineEdit, QSpinBox, QDateEdit)):
-                # Bei mehreren Eingabefeldern: Zum nächsten Feld springen
                 if len(self.input_widgets) > 1:
-                    # Prüfen ob es das letzte Eingabefeld ist
                     input_widgets_list = list(self.input_widgets.values())
                     if current_focused in input_widgets_list:
                         current_index = input_widgets_list.index(current_focused)
-                        # Wenn letztes Feld -> OK Button auslösen
                         if current_index == len(input_widgets_list) - 1:
                             if self.default_button_widget:
                                 self.default_button_widget.click()
                             elif self.button_widgets:
                                 self.button_widgets[0].click()
                         else:
-                            # Zum nächsten Eingabefeld springen
                             next_widget = input_widgets_list[current_index + 1]
                             next_widget.setFocus()
                             if isinstance(next_widget, QLineEdit):
@@ -32845,27 +33315,22 @@ class myUniversalDialog(QDialog):
                             elif isinstance(next_widget, QDateEdit):
                                 next_widget.lineEdit().selectAll()
                 else:
-                    # Nur ein Eingabefeld: OK Button auslösen
                     if self.default_button_widget:
                         self.default_button_widget.click()
                     elif self.button_widgets:
                         self.button_widgets[0].click()
 
-            # Wenn ein Button fokussiert ist -> diesen Button klicken
             elif current_focused in self.button_widgets:
                 current_focused.click()
 
-            # Sonst: Standard-Button klicken
             elif self.default_button_widget:
                 self.default_button_widget.click()
             elif self.button_widgets:
                 self.button_widgets[0].click()
 
-        # Pfeiltasten-Navigation zwischen Buttons (nur wenn kein Eingabefeld fokussiert ist)
         elif event.key() in (Qt.Key_Left, Qt.Key_Right):
             current_focused = self.focusWidget()
 
-            # Nur zwischen Buttons navigieren wenn kein Eingabefeld fokussiert ist
             if not isinstance(current_focused, (QLineEdit, QSpinBox, QDateEdit)):
                 if self.button_widgets:
                     if current_focused in self.button_widgets:
@@ -32878,7 +33343,6 @@ class myUniversalDialog(QDialog):
                     else:
                         self.button_widgets[0].setFocus()
 
-        # Tab: Standard-Tab-Verhalten
         elif event.key() == Qt.Key_Tab:
             self.focusNextPrevChild(True)
             QTimer.singleShot(10, self._select_text_in_current_focus)
@@ -32923,6 +33387,13 @@ class myUniversalDialog(QDialog):
         screen = QApplication.primaryScreen().availableGeometry()
         max_height = int(screen.height() * 0.8)
         self.setFixedHeight(min(int(total_height), max_height))
+
+    def reject(self):
+        """Zentraler Abbruchpunkt"""
+        if self.result_value is None:
+            self.result_value = 'cancel'
+        super().reject()
+        self.closed.emit()
 
 ###==============================================
 ### HAUPTFENSTER
@@ -33197,6 +33668,11 @@ class PDFViewer(QMainWindow):
         self.graphics_view.setCursor(Qt.ArrowCursor)
         self.graphics_view.viewport().setCursor(Qt.ArrowCursor)
         QApplication.setOverrideCursor(Qt.ArrowCursor) # setzt den Cursor für die ganze Applikation und überschreibt alle anderen Cursor-Wechsel
+
+        # Willkommens-Dialog für neue Benutzer
+        # am Ende der Initialisierung
+        # Nachdem alle UI-Elemente erstellt wurden
+        self._delayed_welcome_check()
 
         # === Update‑Prüfung mit 20 Sekunden Verzögerung ===
         self._update_checked = False
@@ -34165,6 +34641,14 @@ class PDFViewer(QMainWindow):
         pdf_info_action.setShortcut("Ctrl+Alt+I")
         pdf_info_action.triggered.connect(self.show_pdf_info)
         info_section.addAction(pdf_info_action)
+
+        info_section.addSeparator()
+
+        # User Data verzeichnis anzeigen
+        user_data_action = QAction(qta.icon('fa5s.folder'), "Open User Data Folder", self)
+        user_data_action.setShortcut("Ctrl+Alt+D")
+        user_data_action.triggered.connect(self.open_user_data_folder)
+        info_section.addAction(user_data_action)
 
         info_section.addSeparator()
 
@@ -35489,6 +35973,384 @@ class PDFViewer(QMainWindow):
     def cleanup_temp_files(self):
         """Delegiert an base_window"""
         return self.base_window.cleanup_temp_files()
+
+    def open_user_data_folder(self):
+        """
+        Öffnet den User Data Ordner im Datei-Explorer / Finder.
+        Zeigt den Pfad in der Statusleiste an.
+        """
+        # User Data Ordner ermitteln
+        if getattr(sys, 'frozen', False):
+            user_base = Config.get_user_data_dir()
+        else:
+            user_base = os.path.join(os.path.dirname(__file__), 'test_user_data')
+            os.makedirs(user_base, exist_ok=True)
+
+        if not user_base or not os.path.exists(user_base):
+            self.statusBar().showMessage("⚠️ User data folder not found", 3000)
+            return
+
+        # Pfad in der Statusleiste anzeigen
+        self.statusBar().showMessage(f"📂 {user_base}", 5000)
+
+        # Ordner im Datei-Explorer öffnen
+        try:
+            if platform.system() == 'Windows':
+                os.startfile(user_base)
+            elif platform.system() == 'Darwin':  # macOS
+                subprocess.Popen(['open', user_base])
+            else:  # Linux
+                subprocess.Popen(['xdg-open', user_base])
+        except Exception as e:
+            # Fallback: Pfad in Statusleiste anzeigen
+            self.statusBar().showMessage(f"📂 {user_base} (Could not open folder)", 5000)
+            print(f"📂 User Data Folder: {user_base}")
+
+    ### =====================================
+    ### Willkommen Dialog für neue Benutzer
+    ### =====================================
+
+    def _delayed_welcome_check(self):
+        """Führt die Willkommensprüfung mit Verzögerung durch."""
+
+        # Prüfen ob es der erste Start ist
+        if getattr(sys, 'frozen', False):
+            user_base = Config.get_user_data_dir()
+        else:
+            user_base = os.path.join(os.path.dirname(__file__), 'test_user_data')
+            os.makedirs(user_base, exist_ok=True)
+
+        if not user_base:
+            return
+
+        welcome_marker = os.path.join(user_base, ".welcome_shown")
+        if os.path.exists(welcome_marker):
+            return
+
+        # Sicherstellen dass Übersetzungen geladen sind
+        # Die Language-Klasse lädt bereits alle Übersetzungen in __init__
+        # Aber zur Sicherheit: nochmal laden
+        if hasattr(self.lang, '_load_all_strings'):
+            self.lang._load_all_strings()
+
+        # Kurze Verzögerung, damit die UI vollständig initialisiert ist
+        QTimer.singleShot(300, self._show_welcome_dialog_if_first_start)
+
+    def _show_welcome_dialog_if_first_start(self):
+        """
+        Zeigt einen Willkommens-Dialog beim ersten Start.
+        Verwendet Fallback-Übersetzungen falls tr() noch nicht funktioniert.
+        """
+
+        # Systemsprache ermitteln
+        system_lang = self.lang.get_system_language()
+        system_lang_name = self.lang.get_language_name(system_lang)
+        system_flag = self.lang.get_flag(system_lang)
+
+        is_supported = system_lang in LANGUAGE_INFO
+        is_available = system_lang in self.lang.available
+
+        # ----- FALLBACK-ÜBERSETZUNGEN (falls tr() noch nicht funktioniert) -----
+        FALLBACK = {
+            'de': {
+                'welcome_title': 'Willkommen bei PDF Dark View',
+                'welcome_title_not_supported': 'Willkommen bei PDF Dark View',
+                'welcome_message': 'Willkommen bei PDF Dark View!\n\nIhre Systemsprache wurde als "{language}" erkannt.\nMöchten Sie diese Sprache für die Benutzeroberfläche verwenden?\n\nSie können die Sprache jederzeit über "Einstellungen → Sprache" ändern.',
+                'welcome_message_language_not_available': 'Willkommen bei PDF Dark View!\n\nIhre Systemsprache wurde als "{language}" erkannt.\nDiese Sprache ist derzeit noch nicht installiert.\n\nMöchten Sie die Übersetzungen für {language} jetzt von GitHub herunterladen?\n\n(Die Sprache wird dann automatisch für die Benutzeroberfläche verwendet.)',
+                'welcome_message_language_not_supported': 'Willkommen bei PDF Dark View!\n\nIhre Systemsprache wurde als "{language}" erkannt.\nLeider gibt es für diese Sprache derzeit noch keine Übersetzungen.\n\nDie Benutzeroberfläche wird daher auf {fallback_language} angezeigt.\n\nSie können die Sprache jederzeit über "Einstellungen → Sprache" ändern.\nWenn Sie möchten, können Sie auch selbst eine Übersetzung für Ihre Sprache beitragen:\nhttps://github.com/BinhDiez64/PDFDarkView',
+                'welcome_use_system_language': 'Ja, Systemsprache verwenden',
+                'welcome_keep_english': 'Nein, Englisch behalten',
+                'welcome_download_language': 'Ja, {language} herunterladen',
+            },
+            'en': {
+                'welcome_title': 'Welcome to PDF Dark View',
+                'welcome_title_not_supported': 'Welcome to PDF Dark View',
+                'welcome_message': 'Welcome to PDF Dark View!\n\nYour system language has been detected as "{language}".\nWould you like to use this language for the user interface?\n\nYou can change the language at any time via "Settings → Language".',
+                'welcome_message_language_not_available': 'Welcome to PDF Dark View!\n\nYour system language has been detected as "{language}".\nThis language is not yet installed.\n\nWould you like to download the translations for {language} from GitHub now?\n\n(The language will then be automatically used for the user interface.)',
+                'welcome_message_language_not_supported': 'Welcome to PDF Dark View!\n\nYour system language has been detected as "{language}".\nUnfortunately, there are no translations available for this language yet.\n\nThe user interface will therefore be displayed in {fallback_language}.\n\nYou can change the language at any time via "Settings → Language".\nIf you like, you can also contribute a translation for your language:\nhttps://github.com/BinhDiez64/PDFDarkView',
+                'welcome_use_system_language': 'Yes, use system language',
+                'welcome_keep_english': 'No, keep English',
+                'welcome_download_language': 'Yes, download {language}',
+            },
+            'vi': {
+                'welcome_title': 'Chào mừng đến với PDF Dark View',
+                'welcome_title_not_supported': 'Chào mừng đến với PDF Dark View',
+                'welcome_message': 'Chào mừng đến với PDF Dark View!\n\nNgôn ngữ hệ thống của bạn được phát hiện là "{language}".\nBạn có muốn sử dụng ngôn ngữ này cho giao diện người dùng không?\n\nBạn có thể thay đổi ngôn ngữ bất kỳ lúc nào qua "Cài đặt → Ngôn ngữ".',
+                'welcome_message_language_not_available': 'Chào mừng đến với PDF Dark View!\n\nNgôn ngữ hệ thống của bạn được phát hiện là "{language}".\nNgôn ngữ này chưa được cài đặt.\n\nBạn có muốn tải xuống bản dịch cho {language} từ GitHub ngay bây giờ không?\n\n(Ngôn ngữ sẽ được tự động sử dụng cho giao diện người dùng.)',
+                'welcome_message_language_not_supported': 'Chào mừng đến với PDF Dark View!\n\nNgôn ngữ hệ thống của bạn được phát hiện là "{language}".\nRất tiếc, hiện chưa có bản dịch cho ngôn ngữ này.\n\nGiao diện người dùng sẽ được hiển thị bằng {fallback_language}.\n\nBạn có thể thay đổi ngôn ngữ bất kỳ lúc nào qua "Cài đặt → Ngôn ngữ".\nNếu bạn muốn, bạn cũng có thể đóng góp bản dịch cho ngôn ngữ của mình:\nhttps://github.com/BinhDiez64/PDFDarkView',
+                'welcome_use_system_language': 'Có, sử dụng ngôn ngữ hệ thống',
+                'welcome_keep_english': 'Không, giữ tiếng Anh',
+                'welcome_download_language': 'Có, tải xuống {language}',
+            }
+        }
+
+        # Aktuelle Sprache für Fallback bestimmen
+        current_lang = self.lang.get_language()
+        fallback_dict = FALLBACK.get(current_lang, FALLBACK['en'])
+
+        # ----- Dialog basierend auf Verfügbarkeit -----
+        if is_available:
+            # WICHTIG: language direkt ersetzen
+            message = fallback_dict.get('welcome_message', '').format(
+                language=f"{system_flag} {system_lang_name}"
+            )
+            buttons = [
+                (fallback_dict.get('welcome_use_system_language', 'Ja'), "primary", "use_system", 200),
+                (fallback_dict.get('welcome_keep_english', 'Nein'), "secondary", "keep_english", 180)
+            ]
+            default_button = "use_system"
+            title = fallback_dict.get('welcome_title', 'Willkommen')
+
+        elif is_supported and not is_available:
+            message = fallback_dict.get('welcome_message_language_not_available', '').format(
+                language=f"{system_flag} {system_lang_name}"
+            )
+            buttons = [
+                (fallback_dict.get('welcome_download_language', 'Herunterladen').format(language=system_lang_name), "primary", "download", 200),
+                (fallback_dict.get('welcome_keep_english', 'Nein'), "secondary", "keep_english", 180)
+            ]
+            default_button = "download"
+            title = fallback_dict.get('welcome_title', 'Willkommen')
+
+        else:
+            message = fallback_dict.get('welcome_message_language_not_supported', '').format(
+                language=f"{system_flag} {system_lang_name}",
+                fallback_language="Englisch"
+            )
+            buttons = [
+                (fallback_dict.get('welcome_keep_english', 'OK').format(fallback_language="Englisch"), "primary", "keep_english", 180)
+            ]
+            default_button = "keep_english"
+            title = fallback_dict.get('welcome_title_not_supported', 'Willkommen')
+
+        # Dialog anzeigen
+        dialog = myUniversalDialog(
+            self,
+            title=title,
+            message=message,
+            buttons=buttons,
+            icon_type="info",
+            text_alignment=Qt.AlignLeft,
+            default_button=default_button
+        )
+        dialog.exec_()
+
+        # ----- BENUTZERENTSCHEIDUNG VERARBEITEN -----
+
+        # Fall 1: Sprache verfügbar und Benutzer wählt "Ja"
+        if dialog.result_value == "use_system" and is_available:
+            self.lang.set_language(system_lang)
+            self.refresh_ui_language()
+            print(f"🌍 Benutzer hat Systemsprache gewählt: {system_lang} ({system_lang_name})")
+            if hasattr(self, 'statusBar'):
+                self.statusBar().showMessage(f"🌍 Sprache: {system_lang_name}", 3000)
+
+        # Fall 2: Sprache unterstützt, aber nicht verfügbar - Download
+        elif dialog.result_value == "download" and is_supported and not is_available:
+            print(f"📥 Benutzer möchte {system_lang} herunterladen...")
+            if hasattr(self, 'statusBar'):
+                self.statusBar().showMessage(f"📥 Lade {system_lang_name} Übersetzungen herunter...", 3000)
+
+            success = self._download_specific_language(system_lang)
+
+            if success:
+                if hasattr(self.lang, '_load_all_strings'):
+                    self.lang._load_all_strings()
+
+                if system_lang in self.lang.available:
+                    self.lang.set_language(system_lang)
+                    self.refresh_ui_language()
+                    print(f"✅ {system_lang_name} erfolgreich heruntergeladen und aktiviert")
+                    if hasattr(self, 'statusBar'):
+                        self.statusBar().showMessage(f"✅ {system_lang_name} aktiviert", 3000)
+                else:
+                    print(f"⚠️ {system_lang} konnte nicht geladen werden")
+                    if hasattr(self, 'statusBar'):
+                        self.statusBar().showMessage(f"⚠️ {system_lang_name} konnte nicht geladen werden", 3000)
+                    if 'en' in self.lang.available:
+                        self.lang.set_language('en')
+                        self.refresh_ui_language()
+            else:
+                print(f"❌ Download von {system_lang} fehlgeschlagen")
+                if hasattr(self, 'statusBar'):
+                    self.statusBar().showMessage(f"❌ Download fehlgeschlagen, verwende Englisch", 3000)
+                if 'en' in self.lang.available:
+                    self.lang.set_language('en')
+                    self.refresh_ui_language()
+
+        # Fall 3: Sprache nicht unterstützt ODER Benutzer wählt "Nein"
+        else:
+            if 'en' in self.lang.available:
+                self.lang.set_language('en')
+                self.refresh_ui_language()
+                print(f"🌍 Benutzer hat Englisch gewählt")
+                if hasattr(self, 'statusBar'):
+                    self.statusBar().showMessage("🌍 Sprache: English", 3000)
+            elif 'de' in self.lang.available:
+                self.lang.set_language('de')
+                self.refresh_ui_language()
+                print(f"🌍 Benutzer hat Deutsch gewählt")
+            else:
+                print(f"⚠️ Weder Englisch noch Deutsch verfügbar")
+
+        # ----- MARKER SETZEN -----
+        if getattr(sys, 'frozen', False):
+            user_base = Config.get_user_data_dir()
+        else:
+            user_base = os.path.join(os.path.dirname(__file__), 'test_user_data')
+            os.makedirs(user_base, exist_ok=True)
+
+        if user_base:
+            welcome_marker = os.path.join(user_base, ".welcome_shown")
+            try:
+                with open(welcome_marker, 'w') as f:
+                    f.write("shown")
+                print(f"✅ Welcome-Marker gesetzt: {welcome_marker}")
+            except Exception as e:
+                print(f"❌ Fehler beim Setzen des Welcome-Markers: {e}")
+
+    def _download_specific_language(self, lang_code):
+        """
+        Lädt eine spezifische Sprache von GitHub herunter.
+        Gibt True zurück bei Erfolg, sonst False.
+        """
+        if not getattr(sys, 'frozen', False):
+            print("ℹ️ Download nur im Bundle-Modus verfügbar")
+            return False
+
+        try:
+            import requests
+
+            # Prüfen ob die Sprache auf GitHub existiert
+            url_check = f"https://api.github.com/repos/BinhDiez64/PDFDarkView/contents/translations/translations_{lang_code}.py"
+            print(f"🔍 Prüfe ob {lang_code} auf GitHub existiert...")
+
+            response_check = requests.get(url_check, timeout=5)
+            if response_check.status_code != 200:
+                print(f"❌ Sprache {lang_code} nicht auf GitHub gefunden")
+                return False
+
+            # Datei herunterladen
+            url = f"https://raw.githubusercontent.com/BinhDiez64/PDFDarkView/main/translations/translations_{lang_code}.py"
+            print(f"📥 Lade {lang_code} von GitHub herunter...")
+
+            response = requests.get(url, timeout=10)
+            if response.status_code == 200:
+                # User-Verzeichnis für Übersetzungen
+                user_base = Config.get_user_data_dir()
+                if not user_base:
+                    print("❌ Kein Benutzerverzeichnis")
+                    return False
+
+                translations_dir = os.path.join(user_base, 'translations')
+                os.makedirs(translations_dir, exist_ok=True)
+
+                # Datei speichern
+                dst_path = os.path.join(translations_dir, f'translations_{lang_code}.py')
+                with open(dst_path, 'wb') as f:
+                    f.write(response.content)
+
+                print(f"✅ {lang_code} heruntergeladen: {dst_path}")
+                return True
+            else:
+                print(f"❌ Fehler beim Download von {lang_code}: {response.status_code}")
+                return False
+
+        except Exception as e:
+            print(f"❌ Fehler beim Download von {lang_code}: {e}")
+            return False
+
+    def refresh_ui_language(self):
+        """
+        Aktualisiert die gesamte GUI nach einem Sprachwechsel.
+        """
+        # Menüs neu erstellen
+        self.menuBar().clear()
+        self.init_menu_bar()
+
+        # Buttons und Labels aktualisieren
+        self.update_button_texts()
+
+        # Statusleiste aktualisieren
+        self.update_status_bar()
+
+        # Tooltips aktualisieren
+        self.update_tooltips()
+
+        print("🔄 GUI-Sprache aktualisiert")
+
+    def update_button_texts(self):
+        """Aktualisiert die Texte aller Buttons."""
+        # Navigationsleiste
+        self.btn_open.setText(self.tr('btn_open'))
+        self.btn_Textfenster.setText(self.tr('btn_text_window'))
+        self.btn_first.setText(self.tr('btn_first'))
+        self.btn_prev.setText(self.tr('btn_prev'))
+        self.btn_next.setText(self.tr('btn_next'))
+        self.btn_last.setText(self.tr('btn_last'))
+        self.btn_print.setText(self.tr('btn_print'))
+        self.btn_darkmode.setText(self.tr('btn_darkmode_dark' if self.dark_mode else 'btn_darkmode_light'))
+
+        # Suchleiste
+        self.search_bar.setPlaceholderText(self.tr('search_placeholder'))
+
+        # Seitenzähler
+        self.page_count_label.setText(self.tr('page_count', self.total_pages))
+
+    def update_status_bar(self):
+        """Aktualisiert die Statusleiste."""
+        self.statusBar().showMessage(f"Backup: {'✔' if self.create_backup else '✘'}")
+
+    def update_tooltips(self):
+        """Aktualisiert alle Tooltips."""
+        self.page_spin.setToolTip(self.tr('goto_page'))
+        # Weitere Tooltips hier...
+
+    def _apply_downloaded_language(self, lang_code):
+        """
+        Wendet eine heruntergeladene Sprache an.
+        """
+        if lang_code in self.lang.available:
+            self.lang.set_language(lang_code)
+            self.refresh_ui_language()
+            lang_name = self.lang.get_language_name(lang_code)
+            print(f"🌍 Sprache gewechselt zu: {lang_code} ({lang_name})")
+            self.statusBar().showMessage(f"🌍 Sprache gewechselt zu: {lang_name}", 3000)
+        else:
+            print(f"⚠️ Sprache {lang_code} wurde nicht erfolgreich geladen")
+            self.statusBar().showMessage(f"⚠️ Sprache {lang_code} konnte nicht geladen werden", 3000)
+
+    def reset_welcome_dialog(self):
+        """
+        Setzt den Welcome-Marker zurück, damit der Dialog beim nächsten Start erscheint.
+        Nur für Tests im Entwicklungsmodus gedacht!
+        """
+        if getattr(sys, 'frozen', False):
+            user_base = Config.get_user_data_dir()
+        else:
+            # Entwicklungsmodus: temporäres Test-Verzeichnis
+            user_base = os.path.join(os.path.dirname(__file__), 'test_user_data')
+            os.makedirs(user_base, exist_ok=True)
+            print(f"📁 Entwicklungsmodus - Test-Verzeichnis: {user_base}")
+
+        if not user_base:
+            print("❌ Kein Benutzerverzeichnis gefunden")
+            return
+
+        welcome_marker = os.path.join(user_base, ".welcome_shown")
+        if os.path.exists(welcome_marker):
+            os.remove(welcome_marker)
+            print(f"🗑️ Welcome-Marker gelöscht: {welcome_marker}")
+            print("💡 Beim nächsten Start wird der Willkommens-Dialog angezeigt.")
+        else:
+            print(f"ℹ️ Kein Welcome-Marker gefunden: {welcome_marker}")
+            print("💡 Der Dialog wird beim nächsten Start angezeigt.")
+
+        # Optional: Auch Version zurücksetzen für vollständigen Test
+        version_file = os.path.join(user_base, ".version")
+        if os.path.exists(version_file):
+            os.remove(version_file)
+            print(f"🗑️ Version zurückgesetzt: {version_file}")
 
     ###=======================================
     ### Aktionen im Menü Datei - übersetzt
@@ -41439,276 +42301,610 @@ class PDFViewer(QMainWindow):
 
     ### 12 Behalten von Einfügungen beim Neuladen Wechsel Dark / Light Mode ...
     ### 3 zentrale Methoden und 5 dezentrale
+
     def _save_overlay_data(self):
-        """Speichert alle aktuellen Overlay-Elemente (Texte, Kreuze, Signaturen, Bilder, Formen) in einer Liste."""
+        """
+        Sammelt alle Overlay-Elemente (Texte, Kreuze, Signaturen, Bilder, Formen, Redactions)
+        und speichert sie in self._saved_overlays als unabhängige Datenstruktur.
+
+        WICHTIG:
+        - Die Daten werden als Python-Dictionaries gespeichert, NICHT als Qt-Objekte
+        - Dadurch sind sie unabhängig von der Qt-Szene und überleben das Neuladen
+        - Jeder Eintrag enthält alle nötigen Informationen zur Wiederherstellung
+        - Auch der Dark Mode-Status wird berücksichtigt (Farben werden entsprechend gespeichert)
+
+        RÜCKGABE:
+        - None (die Daten werden in self._saved_overlays gespeichert)
+        """
+
         data = []
-        # Aktuelle Seite merken
-        data.append({'type': 'meta', 'current_page': self.current_page})
 
-        # Texte und Kreuze
-        for item in self.all_text_items:
-            if hasattr(item, 'item_type') and item.item_type == "cross":
-                # Kreuz
-                d = {
-                    'type': 'cross',
-                    'page': item.page,
-                    'pos_x': item.pos().x(),
-                    'pos_y': item.pos().y(),
-                    'font_size': item.font_size,
-                    'line_width': item.line_width,
-                    'arm_length': item.arm_length,
-                    'color': item.text_color.name() if hasattr(item, 'text_color') else "#000000",
-                    'bold': item.bold if hasattr(item, 'bold') else True,
-                    'offset_x': getattr(item, 'offset_x', 0),
-                    'offset_y': getattr(item, 'offset_y', 0)
-                }
-            else:
-                # Text
-                if hasattr(item, 'get_format_data'):
-                    fd = item.get_format_data()
+        # ===== 1. Metadaten: Aktuelle Seite speichern =====
+        if self.page_items:
+            data.append({'type': 'meta', 'current_page': self.current_page})
+        else:
+            data.append({'type': 'meta', 'current_page': 0})
+
+        # ===== 2. Texte und Kreuze sammeln =====
+        # Wichtig: Wir iterieren über eine Kopie der Liste, falls sich während des Sammelns etwas ändert
+        for item in self.all_text_items[:]:
+            try:
+                # Prüfen ob das Item noch gültig ist (nicht gelöscht)
+                if item and not sip.isdeleted(item):
+
+                    # ===== Kreuz (X-Mark) =====
+                    if hasattr(item, 'item_type') and item.item_type == "cross":
+                        d = {
+                            'type': 'cross',
+                            'page': item.page,
+                            'pos_x': item.pos().x(),
+                            'pos_y': item.pos().y(),
+                            'font_size': item.font_size,
+                            'line_width': item.line_width,
+                            'arm_length': item.arm_length,
+                            'color': item.text_color.name() if hasattr(item, 'text_color') else "#000000",
+                            'bold': item.bold if hasattr(item, 'bold') else True,
+                            'offset_x': getattr(item, 'offset_x', 0),
+                            'offset_y': getattr(item, 'offset_y', 0)
+                        }
+
+                    # ===== Text =====
+                    else:
+                        if hasattr(item, 'get_format_data'):
+                            fd = item.get_format_data()
+                            d = {
+                                'type': 'text',
+                                'page': item.page,
+                                'pos_x': item.pos().x(),
+                                'pos_y': item.pos().y(),
+                                'text': fd['text'],
+                                'font_size': fd['font_size'],
+                                'bold': fd['bold'],
+                                'italic': fd.get('italic', False),
+                                'underline': fd.get('underline', False),
+                                'color': fd['color'].name(),
+                                'alignment': fd['alignment'],
+                                'opacity': fd.get('opacity', 100),
+                                'word_wrap': fd.get('word_wrap', False),
+                                'width_mode': fd.get('width_mode', 'auto')
+                            }
+                        else:
+                            # Fallback für ältere Items
+                            d = {
+                                'type': 'text',
+                                'page': item.page,
+                                'pos_x': item.pos().x(),
+                                'pos_y': item.pos().y(),
+                                'text': item.toPlainText(),
+                                'font_size': getattr(item, 'font_size', 16),
+                                'bold': getattr(item, 'bold', False),
+                                'italic': getattr(item, 'italic', False),
+                                'underline': getattr(item, 'underline', False),
+                                'color': getattr(item, 'text_color', QColor(0,0,0)).name(),
+                                'alignment': getattr(item, 'alignment', Qt.AlignLeft),
+                                'opacity': getattr(item, 'opacity', 100),
+                                'word_wrap': getattr(item, 'word_wrap', False),
+                                'width_mode': getattr(item, 'width_mode', 'auto')
+                            }
+                    data.append(d)
+
+            except Exception as e:
+                print(f"DEBUG: Fehler beim Sammeln von Text/Kreuz: {e}")
+
+        # ===== 3. Signaturen sammeln =====
+        for item in self.all_signature_items[:]:
+            try:
+                if item and not sip.isdeleted(item):
+                    # Absoluten Pfad verwenden (wichtig für Windows Bundle)
+                    abs_path = os.path.abspath(item.original_path) if item.original_path else ""
                     d = {
-                        'type': 'text',
-                        'page': item.page,
+                        'type': 'signature',
+                        'page': item.page_num,
                         'pos_x': item.pos().x(),
                         'pos_y': item.pos().y(),
-                        'text': fd['text'],
-                        'font_size': fd['font_size'],
-                        'bold': fd['bold'],
-                        'italic': fd.get('italic', False),
-                        'underline': fd.get('underline', False),
-                        'color': fd['color'].name(),
-                        'alignment': fd['alignment'],
-                        'opacity': fd.get('opacity', 100),
-                        'word_wrap': fd.get('word_wrap', False),
-                        'width_mode': fd.get('width_mode', 'auto')
+                        'signature_number': item.signature_number,
+                        'original_path': abs_path,  # Absoluter Pfad!
+                        'size_percent': item.size_percent,
+                        'has_timestamp': hasattr(item, 'timestamp_item') and item.timestamp_item is not None,
+                        'timestamp_text': item.timestamp_item.toPlainText() if (hasattr(item, 'timestamp_item') and item.timestamp_item) else ""
                     }
-                else:
-                    # Fallback
+                    data.append(d)
+            except Exception as e:
+                print(f"DEBUG: Fehler beim Sammeln von Signatur: {e}")
+
+        # ===== 4. Bilder sammeln =====
+        for item in self.all_image_items[:]:
+            try:
+                if item and not sip.isdeleted(item):
+                    abs_path = os.path.abspath(item.original_path) if item.original_path else ""
                     d = {
-                        'type': 'text',
-                        'page': item.page,
+                        'type': 'image',
+                        'page': item.page_num,
                         'pos_x': item.pos().x(),
                         'pos_y': item.pos().y(),
-                        'text': item.toPlainText(),
-                        'font_size': getattr(item, 'font_size', 16),
-                        'bold': getattr(item, 'bold', False),
-                        'italic': getattr(item, 'italic', False),
-                        'underline': getattr(item, 'underline', False),
-                        'color': getattr(item, 'text_color', QColor(0,0,0)).name(),
-                        'alignment': getattr(item, 'alignment', Qt.AlignLeft),
-                        'opacity': getattr(item, 'opacity', 100),
-                        'word_wrap': getattr(item, 'word_wrap', False),
-                        'width_mode': getattr(item, 'width_mode', 'auto')
+                        'original_path': abs_path,  # Absoluter Pfad!
+                        'aspect_ratio_mode': item.aspect_ratio_mode,
+                        'current_scale': item.pixmap().width() / item.original_pixmap.width() if item.original_pixmap.width() > 0 else 1.0,
+                        'rotation': item.rotation()
                     }
-            data.append(d)
+                    data.append(d)
+            except Exception as e:
+                print(f"DEBUG: Fehler beim Sammeln von Bild: {e}")
 
-        # Signaturen
-        for item in self.all_signature_items:
-            d = {
-                'type': 'signature',
-                'page': item.page_num,
-                'pos_x': item.pos().x(),
-                'pos_y': item.pos().y(),
-                'signature_number': item.signature_number,
-                'original_path': item.original_path,
-                'size_percent': item.size_percent,
-                'has_timestamp': hasattr(item, 'timestamp_item') and item.timestamp_item is not None,
-                'timestamp_text': item.timestamp_item.toPlainText() if (hasattr(item, 'timestamp_item') and item.timestamp_item) else ""
-            }
-            data.append(d)
+        # ===== 5. Formen sammeln =====
+        for item in self.all_form_items[:]:
+            try:
+                if item and not sip.isdeleted(item):
+                    if hasattr(item, 'get_format_data'):
+                        fd = item.get_format_data()
+                        d = {
+                            'type': 'form',
+                            'page': item.page_num,
+                            'pos_x': item.pos().x(),
+                            'pos_y': item.pos().y(),
+                            'form_type': fd['form_type'],
+                            'line_width': fd['line_width'],
+                            'line_color': fd['line_color'].name(),
+                            'fill_color': fd['fill_color'].name() if fd['fill_color'] else None,
+                            'transparent_bg': fd['transparent_bg'],
+                            'rect_x': fd.get('rect_x'),
+                            'rect_y': fd.get('rect_y'),
+                            'rect_w': fd.get('rect_w'),
+                            'rect_h': fd.get('rect_h'),
+                            'start_x': fd.get('start_x'),
+                            'start_y': fd.get('start_y'),
+                            'end_x': fd.get('end_x'),
+                            'end_y': fd.get('end_y')
+                        }
+                    else:
+                        d = {
+                            'type': 'form',
+                            'page': item.page_num,
+                            'pos_x': item.pos().x(),
+                            'pos_y': item.pos().y(),
+                            'form_type': item.form_type,
+                            'line_width': item.line_width,
+                            'line_color': item.line_color.name(),
+                            'fill_color': item.fill_color.name() if item.fill_color else None,
+                            'transparent_bg': item.transparent_bg,
+                            'rect_x': item.rect.x() if hasattr(item, 'rect') else None,
+                            'rect_y': item.rect.y() if hasattr(item, 'rect') else None,
+                            'rect_w': item.rect.width() if hasattr(item, 'rect') else None,
+                            'rect_h': item.rect.height() if hasattr(item, 'rect') else None,
+                            'start_x': item.start_point.x() if hasattr(item, 'start_point') else None,
+                            'start_y': item.start_point.y() if hasattr(item, 'start_point') else None,
+                            'end_x': item.end_point.x() if hasattr(item, 'end_point') else None,
+                            'end_y': item.end_point.y() if hasattr(item, 'end_point') else None
+                        }
+                    data.append(d)
+            except Exception as e:
+                print(f"DEBUG: Fehler beim Sammeln von Form: {e}")
 
-        # Bilder - Speichere die aktuelle Größe
-        for item in self.all_image_items:
-            d = {
-                'type': 'image',
-                'page': item.page_num,
-                'pos_x': item.pos().x(),
-                'pos_y': item.pos().y(),
-                'original_path': item.original_path,
-                'aspect_ratio_mode': item.aspect_ratio_mode,
-                'current_scale': item.pixmap().width() / item.original_pixmap.width() if item.original_pixmap.width() > 0 else 1.0,
-                'rotation': item.rotation()
-            }
-            data.append(d)
-            print(f"DEBUG: Bild gespeichert mit Skalierung: {d['current_scale']}")
+        # ===== 6. Redactions (Schwärzungen) sammeln =====
+        for item in self.all_redaction_items[:]:
+            try:
+                if item and not sip.isdeleted(item):
+                    d = {
+                        'type': 'redaction',
+                        'page': item.page_num,
+                        'rect_x': item.rect.x(),
+                        'rect_y': item.rect.y(),
+                        'rect_w': item.rect.width(),
+                        'rect_h': item.rect.height(),
+                    }
+                    data.append(d)
+            except Exception as e:
+                print(f"DEBUG: Fehler beim Sammeln von Redaction: {e}")
 
-        # Formen
-        for item in self.all_form_items:
-            if hasattr(item, 'get_format_data'):
-                fd = item.get_format_data()
-                d = {
-                    'type': 'form',
-                    'page': item.page_num,
-                    'pos_x': item.pos().x(),
-                    'pos_y': item.pos().y(),
-                    'form_type': fd['form_type'],
-                    'line_width': fd['line_width'],
-                    'line_color': fd['line_color'].name(),
-                    'fill_color': fd['fill_color'].name() if fd['fill_color'] else None,
-                    'transparent_bg': fd['transparent_bg'],
-                    'rect_x': fd.get('rect_x'),
-                    'rect_y': fd.get('rect_y'),
-                    'rect_w': fd.get('rect_w'),
-                    'rect_h': fd.get('rect_h'),
-                    'start_x': fd.get('start_x'),
-                    'start_y': fd.get('start_y'),
-                    'end_x': fd.get('end_x'),
-                    'end_y': fd.get('end_y')
-                }
-            else:
-                # Fallback
-                d = {
-                    'type': 'form',
-                    'page': item.page_num,
-                    'pos_x': item.pos().x(),
-                    'pos_y': item.pos().y(),
-                    'form_type': item.form_type,
-                    'line_width': item.line_width,
-                    'line_color': item.line_color.name(),
-                    'fill_color': item.fill_color.name() if item.fill_color else None,
-                    'transparent_bg': item.transparent_bg,
-                    'rect_x': item.rect.x() if hasattr(item, 'rect') else None,
-                    'rect_y': item.rect.y() if hasattr(item, 'rect') else None,
-                    'rect_w': item.rect.width() if hasattr(item, 'rect') else None,
-                    'rect_h': item.rect.height() if hasattr(item, 'rect') else None,
-                    'start_x': item.start_point.x() if hasattr(item, 'start_point') else None,
-                    'start_y': item.start_point.y() if hasattr(item, 'start_point') else None,
-                    'end_x': item.end_point.x() if hasattr(item, 'end_point') else None,
-                    'end_y': item.end_point.y() if hasattr(item, 'end_point') else None
-                }
-            data.append(d)
-
-        # Redactions /Schwärzungen
-        for item in self.all_redaction_items:
-            d = {
-                'type': 'redaction',
-                'page': item.page_num,
-                'rect_x': item.rect.x(),
-                'rect_y': item.rect.y(),
-                'rect_w': item.rect.width(),
-                'rect_h': item.rect.height(),
-            }
-            data.append(d)
-
-        ## DEBUG
-        # for i, page_item in enumerate(self.page_items):
-        #     print(f"DEBUG VOR SPEICHERN: Seite {i+1} Breite = {page_item.boundingRect().width():.1f}")
-
+        # ===== 7. Daten speichern =====
         self._saved_overlays = data
+        print(f"DEBUG: {len(data)} Overlay-Elemente gesichert (nach Validierung)")
+
+    def _clear_all_items_from_scene(self):
+        """Entfernt ALLE Overlay-Items NUR aus der Szene, aber NICHT aus den Listen!"""
+        print("\n=== CLEAR ALL ITEMS FROM SCENE ===")
+
+        count = 0
+
+        # 1. Texte und Kreuze - NUR aus der Szene entfernen, aber NICHT aus der Liste löschen!
+        for item in self.all_text_items[:]:
+            try:
+                if item and not sip.isdeleted(item):
+                    if item.scene():
+                        item.scene().removeItem(item)
+                    if item.parentItem():
+                        item.setParentItem(None)
+                    count += 1
+            except Exception as e:
+                print(f"DEBUG: Fehler beim Entfernen von Text aus Szene: {e}")
+        # WICHTIG: self.all_text_items wird NICHT geleert!
+        # self.text_mode bleibt auch erhalten!
+
+        # 2. Signaturen
+        for item in self.all_signature_items[:]:
+            try:
+                if item and not sip.isdeleted(item):
+                    if item.scene():
+                        item.scene().removeItem(item)
+                    if item.parentItem():
+                        item.setParentItem(None)
+                    count += 1
+            except Exception as e:
+                print(f"DEBUG: Fehler beim Entfernen von Signatur aus Szene: {e}")
+        # self.all_signature_items wird NICHT geleert!
+
+        # 3. Bilder
+        for item in self.all_image_items[:]:
+            try:
+                if item and not sip.isdeleted(item):
+                    if item.scene():
+                        item.scene().removeItem(item)
+                    if item.parentItem():
+                        item.setParentItem(None)
+                    count += 1
+            except Exception as e:
+                print(f"DEBUG: Fehler beim Entfernen von Bild aus Szene: {e}")
+        # self.all_image_items wird NICHT geleert!
+
+        # 4. Formen
+        for item in self.all_form_items[:]:
+            try:
+                if item and not sip.isdeleted(item):
+                    if item.scene():
+                        item.scene().removeItem(item)
+                    if item.parentItem():
+                        item.setParentItem(None)
+                    count += 1
+            except Exception as e:
+                print(f"DEBUG: Fehler beim Entfernen von Form aus Szene: {e}")
+        # self.all_form_items wird NICHT geleert!
+
+        # 5. Redactions
+        for item in self.all_redaction_items[:]:
+            try:
+                if item and not sip.isdeleted(item):
+                    if item.scene():
+                        item.scene().removeItem(item)
+                    if item.parentItem():
+                        item.setParentItem(None)
+                    count += 1
+            except Exception as e:
+                print(f"DEBUG: Fehler beim Entfernen von Redaction aus Szene: {e}")
+        # self.all_redaction_items wird NICHT geleert!
+
+        print(f"DEBUG: {count} Items aus der Szene entfernt (Listen bleiben erhalten)")
+
+        # WICHTIG: NICHT self.text_mode = False setzen!
+        # Die Modi bleiben erhalten, weil die Items ja noch in den Listen sind
+
+        # Garbage Collection erzwingen
+        import gc
+        gc.collect()
+
+        print("=== CLEAR ALL ITEMS FROM SCENE ABGESCHLOSSEN ===\n")
+
+    def _clear_items_from_scene_only(self):
+        """
+        Entfernt ALLE Overlay-Items NUR aus der grafischen Szene.
+        Die Daten in den Listen (all_text_items etc.) bleiben ERHALTEN!
+
+        WARUM?
+        - Die Qt-Objekte müssen aus der Szene entfernt werden, bevor die PDF neu geladen wird
+        - Sonst gibt es "wrapped C/C++ object has been deleted" Fehler
+        - Aber die Daten in den Listen werden für das nächste _save_overlay_data() benötigt
+        - Deshalb: Nur aus der Szene entfernen, nicht aus den Listen
+
+        WANN?
+        - Wird beim Umschalten des Dark Mode aufgerufen
+        - Wird beim Neuladen der PDF aufgerufen
+        - Wird beim Schließen der App aufgerufen
+
+        ACHTUNG:
+        - Die Modi (text_mode, signature_mode, etc.) bleiben erhalten!
+        - Die aktuellen Items (current_text_item, etc.) bleiben erhalten!
+        - Nur die grafische Darstellung wird entfernt
+        """
+
+        print("\n=== CLEAR ITEMS FROM SCENE ONLY ===")
+
+        removed_count = 0
+
+        # ===== 1. Texte und Kreuze =====
+        # Wir iterieren über eine Kopie der Liste, weil wir während der Iteration die Szene verändern
+        for item in self.all_text_items[:]:
+            try:
+                if item and not sip.isdeleted(item):
+                    # Aus der Szene entfernen
+                    if item.scene():
+                        item.scene().removeItem(item)
+                    # Parent entfernen (wichtig für Speicherfreigabe)
+                    if item.parentItem():
+                        item.setParentItem(None)
+                    removed_count += 1
+            except Exception as e:
+                print(f"DEBUG: Fehler beim Entfernen von Text aus Szene: {e}")
+        # WICHTIG: self.all_text_items wird NICHT geleert!
+
+        # ===== 2. Signaturen =====
+        for item in self.all_signature_items[:]:
+            try:
+                if item and not sip.isdeleted(item):
+                    if item.scene():
+                        item.scene().removeItem(item)
+                    if item.parentItem():
+                        item.setParentItem(None)
+                    removed_count += 1
+            except Exception as e:
+                print(f"DEBUG: Fehler beim Entfernen von Signatur aus Szene: {e}")
+        # self.all_signature_items wird NICHT geleert!
+
+        # ===== 3. Bilder =====
+        for item in self.all_image_items[:]:
+            try:
+                if item and not sip.isdeleted(item):
+                    if item.scene():
+                        item.scene().removeItem(item)
+                    if item.parentItem():
+                        item.setParentItem(None)
+                    removed_count += 1
+            except Exception as e:
+                print(f"DEBUG: Fehler beim Entfernen von Bild aus Szene: {e}")
+        # self.all_image_items wird NICHT geleert!
+
+        # ===== 4. Formen =====
+        for item in self.all_form_items[:]:
+            try:
+                if item and not sip.isdeleted(item):
+                    if item.scene():
+                        item.scene().removeItem(item)
+                    if item.parentItem():
+                        item.setParentItem(None)
+                    removed_count += 1
+            except Exception as e:
+                print(f"DEBUG: Fehler beim Entfernen von Form aus Szene: {e}")
+        # self.all_form_items wird NICHT geleert!
+
+        # ===== 5. Redactions =====
+        for item in self.all_redaction_items[:]:
+            try:
+                if item and not sip.isdeleted(item):
+                    if item.scene():
+                        item.scene().removeItem(item)
+                    if item.parentItem():
+                        item.setParentItem(None)
+                    removed_count += 1
+            except Exception as e:
+                print(f"DEBUG: Fehler beim Entfernen von Redaction aus Szene: {e}")
+        # self.all_redaction_items wird NICHT geleert!
+
+        print(f"DEBUG: {removed_count} Items aus der Szene entfernt (Listen bleiben erhalten)")
+        print(f"DEBUG: Texte in Liste: {len(self.all_text_items)}")
+        print(f"DEBUG: Signaturen in Liste: {len(self.all_signature_items)}")
+        print(f"DEBUG: Bilder in Liste: {len(self.all_image_items)}")
+        print(f"DEBUG: Formen in Liste: {len(self.all_form_items)}")
+        print(f"DEBUG: Redactions in Liste: {len(self.all_redaction_items)}")
+
+        # Garbage Collection erzwingen (wichtig für Windows Bundle)
+        import gc
+        gc.collect()
+
+        print("=== CLEAR ITEMS FROM SCENE ONLY ABGESCHLOSSEN ===\n")
 
     def _restore_overlay_items(self):
-        """Stellt die gespeicherten Overlay-Elemente nach dem Neuladen wieder her."""
-        if not self._saved_overlays:
-            return False
-        for d in self._saved_overlays:
-            if d.get('type') == 'text':
-                page = d['page']
-                pos_x = d['pos_x']  # oder d['rel_x']? Das hängt davon ab, ob Sie schon umgestellt haben
-                pos_y = d['pos_y']
-                page_rect = self.page_items[page].boundingRect()
-                print(f"DEBUG: Nach Laden - Seite {page}, gespeicherte Pos ({pos_x:.1f}, {pos_y:.1f}), aktuelle Seitenbreite {page_rect.width():.1f}")
+        """
+        Stellt alle Overlay-Elemente aus self._saved_overlays wieder her.
 
-        # Metadaten (aktuelle Seite) extrahieren
-        meta = None
+        FUNKTIONSWEISE:
+        1. Prüft ob Daten vorhanden sind
+        2. Leert alle Listen (all_text_items etc.)
+        3. Erstellt für jeden gespeicherten Eintrag ein neues Qt-Objekt
+        4. Fügt die neuen Objekte in die Listen ein
+        5. Aktiviert die entsprechenden Modi
+        6. Springt zur gespeicherten Seite
+
+        WICHTIG:
+        - Die alten Qt-Objekte wurden bereits aus der Szene entfernt (in _clear_items_from_scene_only)
+        - Hier werden NEUE Qt-Objekte aus den gespeicherten Daten erstellt
+        - self._saved_overlays wird NICHT gelöscht (bleibt für nächsten Umschaltvorgang erhalten)
+        - Die Daten werden erst beim Speichern gelöscht (dann sind sie in der PDF)
+
+        RÜCKGABE:
+        - True bei Erfolg, False wenn keine Daten vorhanden
+        """
+
+        print("\n=== RESTORE OVERLAY ITEMS ===")
+
+        # ===== 1. Prüfen ob Daten vorhanden sind =====
+        if not self._saved_overlays:
+            print("DEBUG: Keine Overlay-Daten zum Wiederherstellen")
+            return False
+
+        print(f"DEBUG: Stelle {len(self._saved_overlays)} Elemente wieder her")
+
+        # ===== 2. Sicherheitsprüfung: Ist die Szene bereit? =====
+        if not self.page_items or len(self.page_items) == 0:
+            print("DEBUG: page_items noch nicht bereit - versuche es später")
+            QTimer.singleShot(200, self._restore_overlay_items)
+            return False
+
+        print(f"DEBUG: page_items verfügbar: {len(self.page_items)} Seiten")
+
+        # ===== 3. Alle Listen leeren =====
+        # Die alten Items wurden bereits aus der Szene entfernt, aber die Listen sind noch voll
+        # Wir müssen sie leeren, bevor wir neue Items erstellen
+        self.all_text_items.clear()
+        self.all_signature_items.clear()
+        self.all_image_items.clear()
+        self.all_form_items.clear()
+        self.all_redaction_items.clear()
+
+        # ===== 4. Metadaten extrahieren =====
+        target_page = 0
         for d in self._saved_overlays:
             if d.get('type') == 'meta':
-                meta = d
+                target_page = d.get('current_page', 0)
                 break
-        if meta and 'current_page' in meta:
-            target_page = meta['current_page']
-        else:
-            target_page = 0
 
-        # DEBUG
-        # for i, page_item in enumerate(self.page_items):
-        #     print(f"DEBUG: Seite {i+1} Breite = {page_item.boundingRect().width():.1f}")
+        # ===== 5. Alle Elemente wiederherstellen =====
+        restored_count = 0
 
-        # Alle Elemente wiederherstellen
         for d in self._saved_overlays:
             t = d.get('type')
-            if t == 'cross':
-                self._restore_cross_item(d)
-            elif t == 'text':
-                self._restore_text_item(d)
-            elif t == 'signature':
-                self._restore_signature_item(d)
-            elif t == 'image':
-                self._restore_image_item(d)
-            elif t == 'form':
-                self._restore_form_item(d)
+            try:
+                if t == 'cross':
+                    item = self._restore_cross_item(d)
+                    if item:
+                        self.all_text_items.append(item)
+                        restored_count += 1
+                        print(f"DEBUG: ✅ Kreuz wiederhergestellt auf Seite {item.page}")
 
-        # --- NEU: Modi wieder aktivieren ---
-        if self.all_text_items:
-            self.text_mode = True
-            self.current_text_item = self.all_text_items[-1]  # letztes als aktuell setzen
+                elif t == 'text':
+                    item = self._restore_text_item(d)
+                    if item:
+                        self.all_text_items.append(item)
+                        restored_count += 1
+
+                elif t == 'signature':
+                    item = self._restore_signature_item(d)
+                    if item:
+                        self.all_signature_items.append(item)
+                        restored_count += 1
+
+                elif t == 'image':
+                    item = self._restore_image_item(d)
+                    if item:
+                        self.all_image_items.append(item)
+                        restored_count += 1
+
+                elif t == 'form':
+                    item = self._restore_form_item(d)
+                    if item:
+                        self.all_form_items.append(item)
+                        restored_count += 1
+
+                elif t == 'redaction':
+                    item = self._restore_redaction_item(d)
+                    if item:
+                        self.all_redaction_items.append(item)
+                        restored_count += 1
+
+            except Exception as e:
+                print(f"DEBUG: Fehler bei {t}: {e}")
+                import traceback
+                traceback.print_exc()
+
+        print(f"DEBUG: Wiederhergestellt: {restored_count} Elemente")
+        print(f"DEBUG: Texte: {len(self.all_text_items)}, Signaturen: {len(self.all_signature_items)}, "
+            f"Bilder: {len(self.all_image_items)}, Formen: {len(self.all_form_items)}")
+
+        # ===== 6. Modi aktivieren =====
+        self.text_mode = len(self.all_text_items) > 0
+        self.signature_mode = len(self.all_signature_items) > 0
+        self.image_mode = len(self.all_image_items) > 0
+        self.form_mode = len(self.all_form_items) > 0
+        self.redaction_mode = len(self.all_redaction_items) > 0
+
+        # ===== 7. Aktuelle Items setzen und Shortcuts aktivieren =====
+        if self.text_mode:
+            self.current_text_item = self.all_text_items[-1]
             self.current_text_item.setSelected(True)
-        if self.all_signature_items:
-            self.signature_mode = True
+            self._setup_text_movement_shortcuts()
+
+        if self.signature_mode:
             self.current_signature_item = self.all_signature_items[-1]
             self.current_signature_item.setSelected(True)
-        if self.all_image_items:
-            self.image_mode = True
+            self._setup_movement_shortcuts()
+
+        if self.image_mode:
             self.current_image_item = self.all_image_items[-1]
             self.current_image_item.setSelected(True)
-        if self.all_form_items:
-            self.form_mode = True
+            self._setup_image_shortcuts()
+
+        if self.form_mode:
             self.current_form_item = self.all_form_items[-1]
             self.current_form_item.setSelected(True)
-        elif t == 'redaction':
-            self._restore_redaction_item(d)
+            self._setup_form_keyboard_shortcuts()
 
-        # Aktuelle Seite ansteuern
+        if self.redaction_mode:
+            self.current_redaction_item = self.all_redaction_items[-1]
+            self.current_redaction_item.setSelected(True)
+            self._setup_redaction_shortcuts()
+
+        # ===== 8. Zur gespeicherten Seite springen =====
         if target_page < self.total_pages:
             self.current_page = target_page
             with QSignalBlocker(self.page_spin):
                 self.page_spin.setValue(target_page + 1)
             self.scroll_to_page(announce=False)
 
-        # Menü-Zustände aktualisieren
+        # ===== 9. UI aktualisieren =====
         self.update_menu_states()
+        self.scene.update()
+        self.graphics_view.viewport().update()
+        QApplication.processEvents()
 
-        # Shortcuts für aktive Modi neu einrichten
-        if self.text_mode and self.all_text_items:
-            self._setup_text_movement_shortcuts()
-        if self.signature_mode and self.all_signature_items:
-            self._setup_movement_shortcuts()
-        if self.image_mode and self.all_image_items:
-            self._setup_image_shortcuts()
-        if self.form_mode and self.all_form_items:
-            self._setup_form_keyboard_shortcuts()
+        # ===== 10. WICHTIG: _saved_overlays NICHT LÖSCHEN! =====
+        # Die Daten bleiben erhalten für den nächsten Umschaltvorgang
+        # Erst beim Speichern (in toggle_dark_mode) werden sie gelöscht
+        # self._saved_overlays = None  # <- DAS WEGLASSEN!
 
-        self._saved_overlays = None
+        print("=== RESTORE OVERLAY ITEMS ABGESCHLOSSEN ===\n")
+        print(f"DEBUG: _saved_overlays bleibt erhalten mit {len(self._saved_overlays)} Elementen")
         return True
 
     def _restore_cross_item(self, data):
-        page_num = data['page']
-        if page_num >= len(self.page_items):
-            return
-        page_item = self.page_items[page_num]
+        """Stellt ein Kreuz-Item wieder her - MIT EXPLIZITER PRÜFUNG"""
+        try:
+            print(f"DEBUG: _restore_cross_item aufgerufen mit data: {data}")
 
-        # Farbe je nach aktuellem Dark Mode
-        if self.dark_mode:
-            display_color = QColor(255, 255, 255)
-        else:
-            display_color = QColor(data['color'])
+            page_num = data.get('page', 0)
+            print(f"DEBUG: page_num = {page_num}, len(page_items) = {len(self.page_items)}")
 
-        cross_item = CrossGraphicsItem(
-            data['pos_x'], data['pos_y'],
-            data['arm_length'], data['line_width'],
-            display_color, data['bold'], data['font_size'],
-            page_item
-        )
-        cross_item.viewer = self
-        cross_item.page = page_num
-        cross_item.text_color = QColor(data['color'])  # Originalfarbe
-        cross_item.offset_x = data.get('offset_x', 0)
-        cross_item.offset_y = data.get('offset_y', 0)
+            if page_num >= len(self.page_items):
+                print(f"DEBUG: ❌ Seite {page_num} existiert nicht (nur {len(self.page_items)} Seiten)")
+                return None
 
-        # hohen Z-Wert setzen, damit die Elemente über der PDF-Seite liegen
-        cross_item.setZValue(1000)
+            page_item = self.page_items[page_num]
+            if page_item is None:
+                print(f"DEBUG: ❌ page_item ist None für Seite {page_num}")
+                return None
 
-        self.all_text_items.append(cross_item)
-        # Nicht als current setzen
+            # Farbe basierend auf Dark Mode
+            if self.dark_mode:
+                display_color = QColor(255, 255, 255)
+            else:
+                display_color = QColor(data.get('color', '#000000'))
+
+            print(f"DEBUG: Erstelle Kreuz mit Farbe {display_color.name()}")
+
+            # Kreuz erstellen
+            cross_item = CrossGraphicsItem(
+                data.get('pos_x', 0),
+                data.get('pos_y', 0),
+                data.get('arm_length', 12),
+                data.get('line_width', 4.8),
+                display_color,
+                data.get('bold', True),
+                data.get('font_size', 48),
+                page_item
+            )
+
+            # Attribute setzen
+            cross_item.viewer = self
+            cross_item.page = page_num
+            cross_item.text_color = QColor(data.get('color', '#000000'))
+            cross_item.offset_x = data.get('offset_x', 0)
+            cross_item.offset_y = data.get('offset_y', 0)
+            cross_item.setZValue(1000)
+
+            print(f"DEBUG: ✅ Kreuz erfolgreich erstellt bei ({data.get('pos_x')}, {data.get('pos_y')})")
+            return cross_item
+
+        except Exception as e:
+            print(f"DEBUG: ❌ Fehler in _restore_cross_item: {e}")
+            import traceback
+            traceback.print_exc()
+            return None
 
     def _restore_text_item(self, data):
         page_num = data['page']
@@ -42755,10 +43951,84 @@ class PDFViewer(QMainWindow):
             return False
 
     def _place_or_update_text(self, scene_position, target_page, text_data):
-        """Platziert neuen Text – mit Position oberhalb der Klickposition für bessere Ausrichtung."""
+        """Platziert neuen Text – OHNE automatischen Speicherdialog (wie bei Kreuzen)."""
         try:
             print(f"\n=== PLACE OR UPDATE TEXT (Seite {target_page + 1}) ===")
 
+            # TextItem erstellen
+            text_item = CustomTextItem(
+                text=text_data['text'],
+                font_size=text_data['font_size'],
+                bold=text_data['bold'],
+                italic=text_data['italic'],
+                underline=text_data['underline'],
+                color=text_data['color'],
+                alignment=text_data['alignment'],
+                opacity=text_data['opacity'],
+                word_wrap=text_data.get('word_wrap', False),
+                width_mode=text_data.get('width_mode', 'auto')
+            )
+            text_item.viewer = self
+            text_item.page = target_page
+
+            if target_page < len(self.page_items):
+                page_item = self.page_items[target_page]
+                text_item.setParentItem(page_item)
+                text_item.apply_formatting()
+
+                page_rect = page_item.boundingRect()
+                text_rect = text_item.boundingRect()
+
+                if scene_position is None:
+                    pos_x = (page_rect.width() - text_rect.width()) / 2
+                    pos_y = (page_rect.height() - text_rect.height()) / 2
+                else:
+                    if text_data['alignment'] == Qt.AlignCenter:
+                        pos_x = scene_position.x() - text_rect.width() / 2
+                    elif text_data['alignment'] == Qt.AlignRight:
+                        pos_x = scene_position.x() - text_rect.width()
+                    else:
+                        pos_x = scene_position.x()
+
+                    pos_y = scene_position.y() - text_rect.height()
+
+                pos_x = max(0, min(pos_x, page_rect.width() - text_rect.width()))
+                pos_y = max(0, min(pos_y, page_rect.height() - text_rect.height()))
+
+                text_item.setPos(pos_x, pos_y)
+
+            # Zur Liste hinzufügen
+            self.all_text_items.append(text_item)
+            self.current_text_item = text_item
+            self.text_mode = True
+            self.current_text_item.setSelected(True)
+
+            self._setup_text_movement_shortcuts()
+            self.update_menu_states()
+
+            # WICHTIG: KEIN automatischer Speicherdialog!
+            # Der Benutzer muss wie bei Kreuzen manuell speichern oder Enter drücken
+
+            print(f"DEBUG: Text eingefügt bei ({pos_x:.1f}, {pos_y:.1f})" if 'pos_x' in locals() else "DEBUG: Text eingefügt")
+            return True
+
+        except Exception as e:
+            print(f"Fehler in _place_or_update_text: {e}")
+            import traceback
+            traceback.print_exc()
+            return False
+
+    def _do_place_text(self):
+        """Führt das eigentliche Platzieren des Textes durch (nach Verzögerung)."""
+        if not hasattr(self, '_pending_text_data'):
+            return
+
+        data = self._pending_text_data
+        scene_position = data['scene_position']
+        target_page = data['target_page']
+        text_data = data['text_data']
+
+        try:
             # TextItem erstellen
             text_item = CustomTextItem(
                 text=text_data['text'],
@@ -42804,7 +44074,7 @@ class PDFViewer(QMainWindow):
                 pos_y = max(0, min(pos_y, page_rect.height() - text_rect.height()))
 
                 text_item.setPos(pos_x, pos_y)
-                print(f"DEBUG: Text platziert bei ({pos_x:.1f}, {pos_y:.1f}) - Klick war bei ({scene_position.x():.1f}, {scene_position.y():.1f})")
+                print(f"DEBUG: Text platziert bei ({pos_x:.1f}, {pos_y:.1f}) - Klick war bei ({scene_position.x():.1f}, {scene_position.y():.1f})" if scene_position else f"DEBUG: Text platziert bei ({pos_x:.1f}, {pos_y:.1f})")
 
             # Zur Liste hinzufügen und als aktuelles Item setzen
             self.all_text_items.append(text_item)
@@ -42813,13 +44083,19 @@ class PDFViewer(QMainWindow):
             self.current_text_item.setSelected(True)
 
             self._setup_text_movement_shortcuts()
-            return True
+
+            # Cleanup
+            self._pending_text_data = None
+
+            # Sofort Speicherdialog öffnen (nur wenn nicht schon ein Dialog geöffnet ist)
+            if not hasattr(self, '_dialog_open') or not self._dialog_open:
+                QTimer.singleShot(300, self._show_text_save_dialog_template)
 
         except Exception as e:
-            print(f"Fehler in _place_or_update_text: {e}")
+            print(f"Fehler in _do_place_text: {e}")
             import traceback
             traceback.print_exc()
-            return False
+            self._pending_text_data = None
 
     def _open_text_customize_for_item(self, text_item):
         """Öffnet den Anpassungsdialog für ein bestimmtes Text-Item."""
@@ -43041,7 +44317,7 @@ class PDFViewer(QMainWindow):
                 # "Weiter bearbeiten"
                 (self.tr('save_continue'), "secondary", "continue", 400),
                 # "Alles verwerfen"
-                (self.tr('text_discard_all'), "danger", "clean", 400)
+                (self.tr('text_discard_all'), "danger", "clean", 450)
             ],
             icon_type="",
             # "Alle Texte und Kreuze speichern, anpassen, weiter bearbeiten oder verwerfen?"
@@ -43074,7 +44350,7 @@ class PDFViewer(QMainWindow):
             text_item.setVisible(is_visible)
 
     def _setup_text_movement_shortcuts(self):
-        """Richtet Text-Shortcuts ein - KORRIGIERT für Windows-Kompatibilität"""
+        """Richtet Text-Shortcuts ein - GENAU WIE BEI KREUZEN!"""
         # Alte Shortcuts entfernen
         if hasattr(self, 'text_movement_shortcuts'):
             for shortcut in self.text_movement_shortcuts:
@@ -43086,29 +44362,24 @@ class PDFViewer(QMainWindow):
 
         self.text_movement_shortcuts = []
 
-        # Enter zum Speichern (BEIDE Varianten!)
+        # ===== ENTER TASTEN - GENAU WIE BEI KREUZEN =====
+        # Keine _is_text_editing_safe() Prüfung!
+        # Direkter Aufruf des Speicherdialogs!
+
         shortcut_return = QShortcut(QKeySequence("Return"), self.graphics_view)
-        # DIREKTE Prüfung ohne innere Funktion
-        shortcut_return.activated.connect(
-            lambda: self._show_text_save_dialog_template()
-            if not self._is_text_editing_safe() else None
-        )
+        shortcut_return.activated.connect(self._show_text_save_dialog_template)
         self.text_movement_shortcuts.append(shortcut_return)
 
-        # NumPad Enter
         shortcut_enter = QShortcut(QKeySequence("Enter"), self.graphics_view)
-        shortcut_enter.activated.connect(
-            lambda: self._show_text_save_dialog_template()
-            if not self._is_text_editing_safe() else None
-        )
+        shortcut_enter.activated.connect(self._show_text_save_dialog_template)
         self.text_movement_shortcuts.append(shortcut_enter)
 
-        # Escape zum Abbrechen
+        # ===== ESCAPE =====
         shortcut_esc = QShortcut(QKeySequence("Escape"), self.graphics_view)
         shortcut_esc.activated.connect(self._cleanup_text_mode)
         self.text_movement_shortcuts.append(shortcut_esc)
 
-        # Pfeiltasten für Bewegung
+        # ===== PFEILTASTEN =====
         arrow_keys = [
             (Qt.Key_Up, 0, -5),
             (Qt.Key_Down, 0, 5),
@@ -43118,23 +44389,32 @@ class PDFViewer(QMainWindow):
 
         for key, dx, dy in arrow_keys:
             shortcut = QShortcut(QKeySequence(key), self.graphics_view)
-            # Wichtig: dx, dy in Lambda einfrieren
             shortcut.activated.connect(
                 lambda d=dx, ddy=dy: self._move_text(d, ddy)
-                if not self._is_text_editing_safe() else None
             )
             self.text_movement_shortcuts.append(shortcut)
 
-        # Ctrl+Pfeiltasten für größere Schritte
+        # ===== CTRL+PFEILTASTEN =====
         for key, dx, dy in arrow_keys:
             shortcut = QShortcut(QKeySequence(f"Ctrl+{key}"), self.graphics_view)
             shortcut.activated.connect(
                 lambda d=dx*5, ddy=dy*5: self._move_text(d, ddy)
-                if not self._is_text_editing_safe() else None
             )
             self.text_movement_shortcuts.append(shortcut)
 
-        print(f"{len(self.text_movement_shortcuts)} Text-Shortcuts eingerichtet")
+        print(f"{len(self.text_movement_shortcuts)} Text-Shortcuts eingerichtet (wie bei Kreuzen)")
+
+    def _handle_enter_for_text(self):
+        """Behandelt Enter-Taste für Text - identisch mit Kreuz-Verhalten."""
+        # Prüfe ob im Bearbeitungsmodus
+        if self._is_text_editing_safe():
+            # Im Bearbeitungsmodus: Zeilenumbruch einfügen
+            if hasattr(self.current_text_item, 'insertPlainText'):
+                self.current_text_item.insertPlainText("\n")
+            return
+
+        # Nicht im Bearbeitungsmodus: Speicherdialog öffnen
+        self._show_text_save_dialog_template()
 
     def _is_text_editing_safe(self):
         """Sichere Prüfung ob Text im Bearbeitungsmodus ist (Windows Bundle-kompatibel)"""
@@ -48446,129 +49726,371 @@ class PDFViewer(QMainWindow):
     ###-----------------------------
     ### DARK MODE CMD+D
     ###-----------------------------
-
-    # Original unbedingt behalten auf Mac ohne Probleme
+    # mit Abfrage erst Speichern?
     # def toggle_dark_mode(self):
-    #     current_mode = self.zoom_mode
+    #     """
+    #     Schaltet zwischen Dark und Light Mode um.
 
-    #     # ========== Kopierte Daten sichern ==========
-    #     saved_clipboard = {
-    #         'text': self.copied_text_data,
-    #         'image': self.copied_image_data,
-    #         'form': self.copied_form_data,
-    #         'signature': self.copied_signature_data
-    #     }
+    #     FUNKTIONSWEISE:
+    #     1. Überprüft, ob bereits Overlay-Daten gespeichert sind (self._saved_overlays)
+    #     2. Wenn nicht: Sichert alle Overlay-Elemente (Texte, Kreuze, Signaturen, Bilder, Formen)
+    #     3. Fragt bei ungespeicherten Änderungen: Speichern, Verwerfen oder Abbrechen
+    #     4. Entfernt alle Items aus der Szene (nicht aus den Listen!)
+    #     5. Schaltet den Dark Mode um
+    #     6. Lädt die PDF neu
+    #     7. Stellt die Overlays aus den gesicherten Daten wieder her
 
-    #     self.dark_mode = not self.dark_mode
+    #     WICHTIG:
+    #     - self._saved_overlays wird NUR beim Speichern gelöscht (dann sind die Daten in der PDF)
+    #     - Bei Verwerfen oder Abbruch bleiben die Daten erhalten
+    #     - Die Items werden NUR aus der Szene entfernt, nicht aus den Listen
+    #     - Dadurch bleiben die Daten für den nächsten Umschaltvorgang erhalten
+    #     """
 
-    #     # Sichtbarkeit der Dark-Mode-spezifischen Menüs
-    #     if hasattr(self, 'invert_mode_menu'):
-    #         self.invert_mode_menu.menuAction().setVisible(self.dark_mode)
+    #     print("\n=== TOGGLE DARK MODE ===")
+    #     print(f"Dark Mode aktuell: {self.dark_mode}")
+    #     print(f"Text-Modus: {self.text_mode}")
+    #     print(f"Anzahl Texte: {len(self.all_text_items)}")
+    #     print(f"_saved_overlays vorhanden: {self._saved_overlays is not None}")
+    #     if self._saved_overlays:
+    #         print(f"_saved_overlays hat {len(self._saved_overlays)} Elemente")
 
-    #     if self.dark_mode:
-    #         if hasattr(self, 'threshold_menu'):
-    #             self.threshold_menu.menuAction().setVisible(self.invert_mode == 'smart')
-    #     else:
-    #         if hasattr(self, 'threshold_menu'):
-    #             self.threshold_menu.menuAction().setVisible(False)
-
-    #     # Overlay-Daten sichern
+    #     # ===== 1. Overlay-Daten sichern =====
+    #     # Wichtig: Immer aktualisieren, da sich die Items in der Szene geändert haben könnten
     #     self._save_overlay_data()
+    #     print(f"DEBUG: Gesichert: {len(self._saved_overlays) if self._saved_overlays else 0} Elemente")
 
-    #     # PDF neu laden mit gleichem Zoom-Modus
+    #     # ===== 2. Dialog für ungespeicherte Änderungen =====
+    #     has_unsaved = (self.text_mode or self.signature_mode or self.image_mode or
+    #                 self.form_mode or self.redaction_mode)
+
+    #     if has_unsaved:
+    #         dialog = myUniversalDialog(
+    #             self,
+    #             title=self.tr('unsaved_changes_title'),
+    #             message=self.tr('unsaved_changes_message_darkmode'),
+    #             buttons=[
+    #                 (self.tr('save_and_switch'), "success", "save", 300),
+    #                 (self.tr('discard_and_switch'), "primary", "discard", 300),
+    #                 (self.tr('btn_cancel'), "primary", "cancel", 180)
+    #             ],
+    #             icon_type="",
+    #             text_alignment=Qt.AlignLeft,
+    #             default_button="discard"
+    #         )
+    #         dialog.exec_()
+
+    #         if dialog.result_value == "cancel":
+    #             print("DEBUG: Abgebrochen - Overlays bleiben erhalten")
+    #             return
+
+    #         elif dialog.result_value == "save":
+    #             print("DEBUG: Speichern...")
+    #             # Je nach aktivem Modus speichern
+    #             if self.text_mode:
+    #                 self._save_all_texts_and_crosses(reload_after_save=False)
+    #             elif self.signature_mode:
+    #                 self._save_all_signatures(reload_after_save=False)
+    #             elif self.image_mode:
+    #                 self._save_all_images(reload_after_save=False)
+    #             elif self.form_mode:
+    #                 self._save_all_forms(reload_after_save=False)
+    #             elif self.redaction_mode:
+    #                 self._apply_all_redactions_and_save()
+
+    #             # Nach Speichern: Overlay-Daten löschen (sind jetzt in der PDF)
+    #             # Beim nächsten Umschalten werden sie neu gesichert
+    #             self._saved_overlays = None
+    #             print("DEBUG: Overlay-Daten nach Speichern gelöscht")
+
+    #         elif dialog.result_value == "discard":
+    #             print("DEBUG: Verwerfen - Overlay-Daten bleiben erhalten")
+    #             # self._saved_overlays bleibt erhalten für die Wiederherstellung
+
+    #     # ===== 3. ALLE Items aus der Szene entfernen =====
+    #     # Wichtig: Die Listen (all_text_items etc.) bleiben erhalten!
+    #     # Die Items werden NUR aus der grafischen Szene entfernt
+    #     print("DEBUG: Entferne alle Items aus der Szene (Listen bleiben erhalten)...")
+    #     self._clear_items_from_scene_only()
+
+    #     # ===== 4. Dark Mode umschalten =====
+    #     self.dark_mode = not self.dark_mode
+    #     print(f"DEBUG: Dark Mode neu: {self.dark_mode}")
+
+    #     # ===== 5. PDF neu laden =====
+    #     # Die PDF wird neu geladen, aber die Overlay-Daten bleiben in self._saved_overlays
+    #     current_mode = self.zoom_mode
     #     if hasattr(self, 'pdf_path') and self.pdf_path:
+    #         print(f"DEBUG: Lade PDF neu: {self.pdf_path}")
     #         self.load_pdf()
     #         self.set_zoom_mode(current_mode)
 
-    #     # Overlay-Daten wiederherstellen
-    #     self._restore_overlay_items()
+    #     # ===== 6. Overlays wiederherstellen =====
+    #     # Wenn Overlay-Daten vorhanden sind (mehr als nur meta), wiederherstellen
+    #     if self._saved_overlays is not None and len(self._saved_overlays) > 1:
+    #         print("DEBUG: Stelle Overlays aus gesicherten Daten wieder her...")
+    #         # Verzögerung, damit die Szene vollständig geladen ist (wichtig für Windows Bundle)
+    #         QTimer.singleShot(200, self._restore_overlay_items)
+    #     else:
+    #         print("DEBUG: Keine Overlays wiederherzustellen")
+    #         self._saved_overlays = None
 
-    #     # ========== Kopierte Daten wiederherstellen ==========
-    #     self.copied_text_data = saved_clipboard['text']
-    #     self.copied_image_data = saved_clipboard['image']
-    #     self.copied_form_data = saved_clipboard['form']
-    #     self.copied_signature_data = saved_clipboard['signature']
-
-    #     # Button und Menüeintrag aktualisieren
+    #     # UI aktualisieren
     #     self.update_mode_action_text()
     #     self.save_app_settings()
+    #     print("=== TOGGLE DARK MODE ABGESCHLOSSEN ===\n")
 
-    # mit erst Speichern Abfrage wenn noch Overlays vorhanden
+    # scchaltet sofort um
     def toggle_dark_mode(self):
-        """Schaltet zwischen Dark und Light Mode um - MIT SICHERHEITSABFRAGE"""
+        """
+        Schaltet zwischen Dark und Light Mode um - OHNE SPEICHER-ABFRAGE.
 
-        # Prüfen, ob ungespeicherte Elemente vorhanden sind
-        has_unsaved = (self.text_mode or self.signature_mode or self.image_mode or
-                    self.form_mode or self.redaction_mode)
+        Diese Version wird für Tastaturkurzbefehle (Ctrl+D) und Button-Klicks verwendet,
+        bei denen der Benutzer direkt umschalten möchte, ohne vorher gefragt zu werden.
 
-        saved = False  # Standard: nicht gespeichert
-        dialog = None  # Initialisieren
+        FUNKTIONSWEISE:
+        1. Sichert ALLE Overlay-Elemente (Texte, Kreuze, Signaturen, Bilder, Formen, Redactions)
+        in self._saved_overlays als unabhängige Python-Datenstruktur
+        2. Entfernt alle Qt-Objekte aus der grafischen Szene (NICHT aus den Listen!)
+        3. Schaltet den Dark Mode um (True <-> False)
+        4. Lädt die PDF neu
+        5. Stellt alle Overlay-Elemente aus den gesicherten Daten wieder her
 
-        if has_unsaved:
-            # Frage, ob gespeichert werden soll
-            dialog = myUniversalDialog(
-                self,
-                title=self.tr('unsaved_changes_title'),
-                message=self.tr('unsaved_changes_message_darkmode'),
-                buttons=[
-                    (self.tr('save_and_switch'), "success", "save", 300),
-                    (self.tr('discard_and_switch'), "primary", "discard", 300),
-                    (self.tr('btn_cancel'), "primary", "cancel", 180)
-                ],
-                icon_type="",
-                text_alignment=Qt.AlignLeft,
-                default_button="discard"
-            )
-            dialog.exec_()
+        WICHTIGE PUNKTE FÜR DIE FUNKTIONALITÄT:
 
-            if dialog.result_value == "cancel":
-                return
-            elif dialog.result_value == "save":
-                saved = True
-                # Alle Elemente speichern (je nach aktivem Modus)
-                if self.text_mode:
-                    self._save_all_texts_and_crosses(reload_after_save=True)
-                elif self.signature_mode:
-                    self._save_all_signatures(reload_after_save=True)
-                elif self.image_mode:
-                    self._save_all_images(reload_after_save=True)
-                elif self.form_mode:
-                    self._save_all_forms(reload_after_save=True)
-                elif self.redaction_mode:
-                    self._apply_all_redactions_and_save()
+        a) Datenerhalt:
+        - self._saved_overlays wird NACH der Wiederherstellung NICHT gelöscht
+        - Die Daten bleiben erhalten für den NÄCHSTEN Umschaltvorgang
+        - Erst beim Speichern (über andere Methoden) werden sie gelöscht
 
-        # Jetzt sicher umschalten
-        current_mode = self.zoom_mode
+        b) Listen vs. Szene:
+        - Die Qt-Objekte werden NUR aus der Szene entfernt
+        - Die Listen (all_text_items, all_signature_items, etc.) bleiben ERHALTEN
+        - Dadurch bleiben die Daten für das nächste _save_overlay_data() verfügbar
 
-        # Overlay-Daten für Wiederherstellung sichern (falls nicht gespeichert)
-        if not saved:
-            self._save_overlay_data()
+        c) Windows Bundle Kompatibilität:
+        - Verzögerung (200ms) beim Wiederherstellen gibt der Szene Zeit, sich zu laden
+        - Absolute Pfade werden in _save_overlay_data() verwendet
+        - Garbage Collection wird erzwungen
 
+        d) Modi bleiben erhalten:
+        - self.text_mode, self.signature_mode, etc. werden NICHT zurückgesetzt
+        - Die aktuellen Items (current_text_item, etc.) bleiben erhalten
+        - Die Shortcuts werden nach der Wiederherstellung neu eingerichtet
+
+        RÜCKGABE:
+        - None (die Methode führt die Umschaltung durch)
+
+        BEISPIEL AUFRUF:
+            # Über Tastaturkurzbefehl Ctrl+D
+            # Über Button-Klick in der Navigationsleiste
+            # Über Menüpunkt "Ansicht -> Dark Mode umschalten"
+        """
+
+        print("\n=== TOGGLE DARK MODE (OHNE SPEICHER-ABFRAGE) ===")
+        print(f"Dark Mode aktuell: {self.dark_mode}")
+        print(f"Text-Modus: {self.text_mode}")
+        print(f"Anzahl Texte: {len(self.all_text_items)}")
+        print(f"Anzahl Signaturen: {len(self.all_signature_items)}")
+        print(f"Anzahl Bilder: {len(self.all_image_items)}")
+        print(f"Anzahl Formen: {len(self.all_form_items)}")
+        print(f"Anzahl Redactions: {len(self.all_redaction_items)}")
+
+        # ============================================================
+        # SCHRITT 1: ALLE OVERLAY-DATEN SICHERN
+        # ============================================================
+        #
+        # WARUM?
+        # - Die Qt-Objekte werden gleich aus der Szene entfernt
+        # - Wir brauchen die Daten für die Wiederherstellung nach dem Neuladen
+        # - Die Daten werden als Python-Dictionaries gespeichert (unabhängig von Qt)
+        #
+        # WAS WIRD GESICHERT?
+        # - Texte und Kreuze (Position, Inhalt, Formatierung, Farbe)
+        # - Signaturen (Position, Pfad, Größe, Zeitstempel)
+        # - Bilder (Position, Pfad, Größe, Seitenverhältnis)
+        # - Formen (Position, Typ, Linien, Farben, Transparenz)
+        # - Redactions (Position, Größe)
+        # - Meta-Daten (aktuelle Seite)
+        #
+        # WICHTIG:
+        # - Die Daten werden in self._saved_overlays gespeichert
+        # - Diese Variable bleibt erhalten, bis sie explizit gelöscht wird
+        # - Sie wird NUR beim Speichern gelöscht (nicht beim Umschalten!)
+        # ============================================================
+
+        print("\n--- SCHRITT 1: Overlay-Daten sichern ---")
+        self._save_overlay_data()
+
+        if self._saved_overlays:
+            print(f"✅ {len(self._saved_overlays)} Overlay-Elemente gesichert")
+            print(f"   - Meta: 1 Element (aktuelle Seite)")
+            print(f"   - Texte/Kreuze: {sum(1 for d in self._saved_overlays if d.get('type') in ['text', 'cross'])}")
+            print(f"   - Signaturen: {sum(1 for d in self._saved_overlays if d.get('type') == 'signature')}")
+            print(f"   - Bilder: {sum(1 for d in self._saved_overlays if d.get('type') == 'image')}")
+            print(f"   - Formen: {sum(1 for d in self._saved_overlays if d.get('type') == 'form')}")
+            print(f"   - Redactions: {sum(1 for d in self._saved_overlays if d.get('type') == 'redaction')}")
+        else:
+            print("⚠️ Keine Overlay-Daten gesichert (keine Elemente vorhanden)")
+
+        # ============================================================
+        # SCHRITT 2: ALLE ITEMS AUS DER SZENE ENTFERNEN
+        # ============================================================
+        #
+        # WARUM?
+        # - Die Qt-Objekte sind an die alte PDF-Seite gebunden
+        # - Beim Neuladen würden sie zu "wrapped C/C++ object has been deleted" Fehlern führen
+        # - Sie müssen aus der Szene entfernt werden, bevor die PDF neu geladen wird
+        #
+        # WAS PASSIERT MIT DEN LISTEN?
+        # - Die Listen (all_text_items, etc.) bleiben ERHALTEN!
+        # - NUR die grafische Darstellung wird entfernt
+        # - Die Daten in den Listen werden für das nächste _save_overlay_data() benötigt
+        #
+        # WICHTIG:
+        # - Die Modi (text_mode, etc.) werden NICHT zurückgesetzt!
+        # - Die aktuellen Items (current_text_item, etc.) bleiben erhalten!
+        # - Nur die Szene wird bereinigt, nicht die Datenstruktur!
+        # ============================================================
+
+        print("\n--- SCHRITT 2: Items aus der Szene entfernen ---")
+        print("   (Listen bleiben erhalten für nächste Sicherung)")
+        self._clear_items_from_scene_only()
+
+        # ============================================================
+        # SCHRITT 3: DARK MODE UMSCHALTEN
+        # ============================================================
+        #
+        # WARUM?
+        # - Der Dark Mode beeinflusst die Darstellung der PDF
+        # - Die Farben der Overlays werden beim Wiederherstellen angepasst
+        # - Der Button-Text und Menüpunkt werden aktualisiert
+        #
+        # WAS PASSIERT?
+        # - self.dark_mode wird von True auf False oder von False auf True gesetzt
+        # - Die Sichtbarkeit der Dark-Mode-spezifischen Menüs wird angepasst
+        # - Das Threshold-Menü (Graustufen) wird bei Smart-Modus eingeblendet
+        # ============================================================
+
+        print("\n--- SCHRITT 3: Dark Mode umschalten ---")
         self.dark_mode = not self.dark_mode
+        print(f"✅ Dark Mode neu: {'AKTIV' if self.dark_mode else 'INAKTIV'}")
 
-        # Sichtbarkeit der Dark-Mode-spezifischen Menüs
+        # Sichtbarkeit der Dark-Mode-spezifischen Menüs anpassen
         if hasattr(self, 'invert_mode_menu'):
             self.invert_mode_menu.menuAction().setVisible(self.dark_mode)
+            print(f"   - Invertierungs-Menü: {'sichtbar' if self.dark_mode else 'versteckt'}")
 
         if self.dark_mode:
             if hasattr(self, 'threshold_menu'):
-                self.threshold_menu.menuAction().setVisible(self.invert_mode == 'smart')
+                # Nur bei Smart-Modus sichtbar
+                is_smart = (self.invert_mode == 'smart')
+                self.threshold_menu.menuAction().setVisible(is_smart)
+                print(f"   - Threshold-Menü: {'sichtbar' if is_smart else 'versteckt'}")
         else:
             if hasattr(self, 'threshold_menu'):
                 self.threshold_menu.menuAction().setVisible(False)
+                print(f"   - Threshold-Menü: versteckt (Light Mode)")
 
-        # PDF neu laden
+        # ============================================================
+        # SCHRITT 4: PDF NEU LADEN
+        # ============================================================
+        #
+        # WARUM?
+        # - Die PDF muss mit dem neuen Dark Mode-Status neu gerendert werden
+        # - Die Overlay-Daten bleiben in self._saved_overlays erhalten
+        # - Der Zoom-Modus bleibt erhalten
+        #
+        # WAS PASSIERT?
+        # - Die PDF wird mit dem neuen Dark Mode-Status geladen
+        # - Die Seiten werden neu gerendert
+        # - Die Szene wird mit den neuen Seiten gefüllt
+        # - Der Zoom-Modus wird auf den vorherigen Wert gesetzt
+        # ============================================================
+
+        print("\n--- SCHRITT 4: PDF neu laden ---")
+        current_mode = self.zoom_mode
+        print(f"   - Zoom-Modus: {current_mode}")
+
         if hasattr(self, 'pdf_path') and self.pdf_path:
+            print(f"   - PDF-Pfad: {self.pdf_path}")
             self.load_pdf()
             self.set_zoom_mode(current_mode)
+            print("✅ PDF erfolgreich neu geladen")
+        else:
+            print("⚠️ Keine PDF geladen - Überspringe Neuladen")
 
-        # Overlay-Daten wiederherstellen (wenn nicht gespeichert)
-        if not saved:
-            self._restore_overlay_items()
+        # ============================================================
+        # SCHRITT 5: OVERLAYS WIEDERHERSTELLEN
+        # ============================================================
+        #
+        # WARUM?
+        # - Die Overlay-Elemente müssen nach dem Neuladen wieder angezeigt werden
+        # - Die Daten sind in self._saved_overlays gespeichert
+        # - Die Elemente werden mit den NEUEN Dark Mode-Farben erstellt
+        #
+        # WAS PASSIERT?
+        # - Aus den gespeicherten Daten werden neue Qt-Objekte erstellt
+        # - Die Objekte werden in die Szene eingefügt
+        # - Die Listen werden mit den neuen Objekten gefüllt
+        # - Die Modi werden aktiviert
+        # - Die Shortcuts werden eingerichtet
+        #
+        # WICHTIG:
+        # - Verzögerung (200ms) für Windows Bundle-Kompatibilität
+        # - self._saved_overlays wird NICHT gelöscht!
+        # - Die Daten bleiben für den NÄCHSTEN Umschaltvorgang erhalten
+        # ============================================================
 
-        # Button und Menüeintrag aktualisieren
+        print("\n--- SCHRITT 5: Overlays wiederherstellen ---")
+
+        if self._saved_overlays is not None and len(self._saved_overlays) > 1:
+            print(f"   - {len(self._saved_overlays)} Overlay-Elemente werden wiederhergestellt")
+            print("   - Verzögerung: 200ms (für Windows Bundle-Kompatibilität)")
+
+            # Wichtig: Verzögerung, damit die Szene vollständig geladen ist
+            # Besonders wichtig für Windows Bundle, wo die Szene langsamer lädt
+            QTimer.singleShot(200, self._restore_overlay_items)
+            print("✅ Overlay-Wiederherstellung gestartet")
+        else:
+            if self._saved_overlays is None:
+                print("⚠️ Keine Overlay-Daten vorhanden")
+            else:
+                print("⚠️ Nur Meta-Daten vorhanden (keine Elemente zum Wiederherstellen)")
+            self._saved_overlays = None
+
+        # ============================================================
+        # SCHRITT 6: UI AKTUALISIEREN
+        # ============================================================
+        #
+        # WARUM?
+        # - Der Button-Text muss aktualisiert werden (Dark/Light)
+        # - Der Menüpunkt muss aktualisiert werden
+        # - Die Einstellungen müssen gespeichert werden
+        # ============================================================
+
+        print("\n--- SCHRITT 6: UI aktualisieren ---")
         self.update_mode_action_text()
         self.save_app_settings()
+        print("✅ UI aktualisiert")
+        print("✅ Einstellungen gespeichert")
+
+        # ============================================================
+        # ABSCHLUSS
+        # ============================================================
+
+        print("\n=== TOGGLE DARK MODE ABGESCHLOSSEN ===")
+        print(f"📊 Status nach Umschaltung:")
+        print(f"   - Dark Mode: {'AKTIV' if self.dark_mode else 'INAKTIV'}")
+        print(f"   - Text-Modus: {self.text_mode}")
+        print(f"   - Signaturen: {len(self.all_signature_items)}")
+        print(f"   - Bilder: {len(self.all_image_items)}")
+        print(f"   - Formen: {len(self.all_form_items)}")
+        print(f"   - Redactions: {len(self.all_redaction_items)}")
+        print(f"   - Overlay-Daten erhalten: {self._saved_overlays is not None}")
+        if self._saved_overlays:
+            print(f"   - Overlay-Elemente: {len(self._saved_overlays)}")
+        print("=" * 50 + "\n")
 
     def apply_styles(self):
 
@@ -49903,36 +51425,61 @@ class PDFViewer(QMainWindow):
         settings.setValue("invert_mode", self.invert_mode)
         settings.setValue("gray_threshold", self.gray_threshold)
         settings.setValue("create_backup", self.create_backup)
-        settings.setValue("language", self.lang.get_language())
+
+        # Sprache speichern (mit Fallback)
+        if hasattr(self, 'lang'):
+            settings.setValue("language", self.lang.get_language())
+        else:
+            settings.setValue("language", "de")
+
         settings.setValue("zoom_mode", self.zoom_mode)
-        # Backup-Einstellung
-        settings.setValue("create_backup", self.create_backup)
+
         # Fenstergröße und -position
         settings.setValue("window_geometry", self.saveGeometry())
         settings.setValue("window_state", self.saveState())
-        settings.setValue("navbar_visible", self.nav_bar.isVisible())
+
+        # Navigationsleiste Sichtbarkeit
+        if hasattr(self, 'nav_bar'):
+            settings.setValue("navbar_visible", self.nav_bar.isVisible())
+
         settings.setValue("redact_white_mode", self.redact_white_mode)
+
+        # Welcome-Marker NICHT speichern - wird separat verwaltet!
+        # (nur zur Info: Der Welcome-Marker ist in Config.get_user_data_dir()/.welcome_shown)
+
         settings.sync()
         print("DEBUG: Anwendungseinstellungen gespeichert")
 
     def load_app_settings(self):
         """Lädt ALLE Anwendungseinstellungen aus QSettings"""
         settings = QSettings("BinhDiez", "PDFDarkView")
+
+        # Sprachausgabe
         self.voice_enabled = settings.value("voice_enabled", True, type=bool)
         self.voice_speed = settings.value("voice_speed", 1.0, type=float)
+
+        # Anzeige-Modi
         self.dark_mode = settings.value("dark_mode", True, type=bool)
-        # Invertierungsmodus mit Standard 'smart'
         self.invert_mode = settings.value("invert_mode", "smart", type=str)
         self.gray_threshold = settings.value("gray_threshold", 30, type=int)
         self.create_backup = settings.value("create_backup", True, type=bool)
 
         # Sprache laden (falls vorhanden)
-        language = settings.value("language", "de")
         if hasattr(self, 'lang'):
-            self.lang.set_language(language)
+            language = settings.value("language", None)
+            if language and language in self.lang.available:
+                self.lang.set_language(language)
+                print(f"🌍 Sprache aus Einstellungen geladen: {language}")
+            else:
+                # Falls keine Sprache gespeichert oder nicht verfügbar: Systemsprache verwenden
+                # Die Language-Klasse hat bereits die Systemsprache erkannt
+                current_lang = self.lang.get_language()
+                print(f"🌍 Verwende Systemsprache: {current_lang}")
+                # In den Einstellungen speichern für zukünftige Starts
+                settings.setValue("language", current_lang)
 
         # Zoom-Modus laden
-        self.zoom_mode = settings.value("zoom_mode", "page")
+        self.zoom_mode = settings.value("zoom_mode", "page", type=str)
 
         # Fenstergröße und -position wiederherstellen
         geometry = settings.value("window_geometry")
@@ -49942,11 +51489,10 @@ class PDFViewer(QMainWindow):
         if state:
             self.restoreState(state)
 
-        # Buttonleiste - Sichtbarkeit
-        navbar_visible = settings.value("navbar_visible", True, type=bool)
+        # Navigationsleiste Sichtbarkeit
         if hasattr(self, 'nav_bar'):
+            navbar_visible = settings.value("navbar_visible", True, type=bool)
             self.nav_bar.setVisible(navbar_visible)
-            # Menüpunkt aktualisieren, falls das Menü bereits existiert
             if hasattr(self, 'toggle_navbar_action'):
                 self.toggle_navbar_action.setChecked(navbar_visible)
 
@@ -50088,7 +51634,9 @@ class PDFViewer(QMainWindow):
             buttons=[(self.tr('btn_ok'), "primary", "ok")],
             icon_type="",
             # voice_message=self.tr('language_guide_voice'),  # optional, kurze Sprachausgabe
-            text_alignment=Qt.AlignLeft
+            text_alignment=Qt.AlignLeft,
+            selectable_text=False
+
         )
         dialog.exec_()
 
@@ -51976,6 +53524,9 @@ def main():
 
     # Fenster erstellen
     viewer = PDFViewer()
+
+    # Nur zum Testen aktivieren!
+    # viewer.reset_welcome_dialog() # Willkommen
 
     # OCR-Status an den Viewer übergeben
     viewer.ocr_available = ocr_available
