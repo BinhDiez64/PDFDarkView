@@ -171,6 +171,49 @@ PDFDarkView includes several features designed to improve accessibility:
 * Multilingual interface
 
 ⸻
+
+🇩🇪 Deutsche Beschreibung
+
+PDFDarkView ist ein kostenloser Open-Source-PDF-Viewer und PDF-Editor für Windows und macOS. Die Software ermöglicht das Anzeigen, Bearbeiten, Optimieren und Konvertieren von PDF-Dateien sowie eine leistungsstarke OCR-Texterkennung mit Tesseract OCR.
+
+Besonders geeignet ist PDFDarkView für Anwender, die PDF-Dokumente bearbeiten, Seiten zusammenführen, Seiten extrahieren, Wasserzeichen einfügen, Dokumente schwärzen (Redaktion), PDF-Dateien optimieren oder in PDF/A umwandeln möchten.
+
+Funktionen
+
+* PDF-Dateien öffnen und anzeigen
+* PDF bearbeiten
+* OCR-Texterkennung (Texterkennung aus gescannten Dokumenten)
+* Durchsuchbare PDF erstellen
+* Volltextsuche
+* Text-to-Speech (PDF vorlesen lassen)
+* Dunkelmodus (Dark Mode)
+* Heller Modus
+* Farbumkehr
+* Barrierefreie PDF-Nutzung
+* Unterstützung für sehbehinderte und blinde Nutzer
+* Mehrsprachige Benutzeroberfläche (64 Sprachen)
+* PDF zusammenführen
+* PDF überlagern
+* PDF zuschneiden
+* PDF optimieren
+* PDF/A erstellen
+* Metadaten anzeigen und bearbeiten
+* Seiten drehen, verschieben, löschen und extrahieren
+* Seitenzahlen einfügen
+* Bilder, Text und Signaturen einfügen
+* Wasserzeichen einfügen
+* Dokumente schwärzen (Redaktion)
+* PDF nach DOCX exportieren
+* PDF nach TXT exportieren
+* Bilder aus PDF extrahieren
+* PDF-Seiten als Bilder exportieren
+
+Suchbegriffe
+
+PDF Viewer, PDF Betrachter, PDF Reader, PDF Editor, PDF bearbeiten, PDF bearbeiten kostenlos, Open Source PDF, kostenlose PDF-Software, OCR, Texterkennung, Dokumentenerkennung, gescannte Dokumente erkennen, PDF durchsuchbar machen, PDF zusammenführen, PDF optimieren, PDF komprimieren, PDF in PDF/A umwandeln, PDF zuschneiden, PDF drehen, Seiten extrahieren, Seiten löschen, Seiten verschieben, Ankreuzen, Bilder einfügen, Formen einfügen, Text einfügen, Unterschrift einfügen, Wasserzeichen einfügen, PDF schwärzen, Dokumente anonymisieren, PDF Signatur, PDf unterschreiben, Metadaten bearbeiten, PDF vorlesen, Text-to-Speech, Barrierefreiheit, Sehbehinderung, Screenreader, Sprachausgabe, Dark Mode, Light Mode, Dunkelmodus, PDF Software Windows, PDF Software macOS, Tesseract OCR.
+
+⸻
+
 Licenses
 
 Third-Party Licenses
@@ -182,7 +225,6 @@ This project uses a number of third-party open-source libraries and components. 
 The MIT License of PDFDarkView applies only to the original source code of this project and does not replace or modify the license terms of any third-party software.
 
 For details regarding third-party components and their respective licenses, please refer to the THIRD_PARTY_LICENSES.md file.
-
 
 ⸻
 
