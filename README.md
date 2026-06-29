@@ -1,6 +1,5 @@
 PDFDarkView 2.2.0
 
-
 <img width="382" height="375" alt="PDFDarkView" src="https://github.com/user-attachments/assets/bc440bc9-2def-404b-ad51-142cae26dc19" />
 
 
@@ -169,6 +168,15 @@ PDFDarkView includes several features designed to improve accessibility:
 * Large zoom options
 * Full keyboard navigation support
 * Multilingual interface
+  
+⸻
+
+New Features in version 2.2.0
+• OCR improvements
+• Better Dark Mode
+• Check for Updates on start
+• System-Language detection on first start and download of translations from repository (64 languages)
+• Bug fixes
 
 ⸻
 
@@ -210,7 +218,7 @@ Funktionen
 
 Suchbegriffe
 
-PDF Viewer, PDF Betrachter, PDF Reader, PDF Editor, PDF bearbeiten, PDF bearbeiten kostenlos, Open Source PDF, kostenlose PDF-Software, OCR, Texterkennung, Dokumentenerkennung, gescannte Dokumente erkennen, PDF durchsuchbar machen, PDF zusammenführen, PDF optimieren, PDF komprimieren, PDF in PDF/A umwandeln, PDF zuschneiden, PDF drehen, Seiten extrahieren, Seiten löschen, Seiten verschieben, Ankreuzen, Bilder einfügen, Formen einfügen, Text einfügen, Unterschrift einfügen, Wasserzeichen einfügen, PDF schwärzen, Dokumente anonymisieren, PDF Signatur, PDf unterschreiben, Metadaten bearbeiten, PDF vorlesen, Text-to-Speech, Barrierefreiheit, Sehbehinderung, Screenreader, Sprachausgabe, Dark Mode, Light Mode, Dunkelmodus, PDF Software Windows, PDF Software macOS, Tesseract OCR.
+PDF Viewer, PDF Betrachter, PDF Reader, PDF Editor, PDF bearbeiten, PDF bearbeiten kostenlos, Open Source PDF, kostenlose PDF-Software, OCR, Texterkennung, Dokumentenerkennung, gescannte Dokumente erkennen, PDF durchsuchbar machen, PDF zusammenführen, PDF optimieren, PDF komprimieren, PDF in PDF/A umwandeln, PDF zuschneiden, PDF drehen, Seiten extrahieren, Seiten löschen, Seiten verschieben, Ankreuzen, Bilder einfügen, Formen einfügen, Text einfügen, Unterschrift einfügen, Wasserzeichen einfügen, PDF schwärzen, Dokumente anonymisieren, PDF Signatur, PDf unterschreiben, Metadaten bearbeiten, PDF vorlesen, Text-to-Speech, Barrierefreiheit, Sehbehinderung, Screenreader, Sprachausgabe, Dark Mode, Light Mode, Dunkelmodus, PDF Software Windows, PDF Software macOS, Tesseract OCR, GUI Übersetzung, mehrsprachige Benutzeroberfläche.
 
 ⸻
 
