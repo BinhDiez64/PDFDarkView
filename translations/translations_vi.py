@@ -3319,9 +3319,78 @@ Mẹo: Bạn có thể điều chỉnh cài đặt trong menu ngữ cảnh.
         "welcome_download_language": "Có, tải {language}",
 
         # ============================================
-        # 107. PROGRAMM BEENDEN
+        # 107. ĐƯỜNG DẪN GẦN ĐÂY
         # ============================================
-        "app_quitting": "Chương trình đang đóng",
+        'menu_recent': 'Gần đây',
+        'menu_recent_dirs': 'Thư mục...',
+        'menu_recent_files': 'Tệp...',
+        'recent_manage': 'Quản lý...',
+        # Recent Paths - Cài đặt
+        'recent_enable_tracking': 'Lưu đường dẫn gần đây (Quyền riêng tư)',
+        'recent_enable_info': 'Tắt tùy chọn này để không lưu bất kỳ đường dẫn nào',
+        'recent_tracking_disabled': 'Theo dõi đường dẫn đã tắt',
+        'recent_enabled': 'đã bật',
+        'recent_disabled': 'đã tắt',
+        'recent_tracking_status': 'Theo dõi đường dẫn {0}',
+        # Recent Paths - Hộp thoại
+        'recent_dialog_title': 'Đường dẫn gần đây',
+        'recent_tab_directories': 'Thư mục',
+        'recent_tab_files': 'Tệp',
+        'recent_dirs_instruction': 'Nhấp đúp để mở hộp thoại tệp trong thư mục',
+        'recent_files_instruction': 'Nhấp đúp để mở trực tiếp PDF',
+        'recent_no_directories': '(không có thư mục nào được lưu)',
+        'recent_no_files': '(không có tệp nào được lưu)',
+        'recent_default_current': '⭐ Mặc định: {0}',
+        'recent_set_as_default': '⭐ Đặt làm mặc định',
+        'recent_default_set_title': 'Đã đặt thư mục mặc định',
+        'recent_default_set_message': 'Thư mục "{0}" đã được đặt làm mặc định để mở PDF.',
+        'recent_default_set_voice': 'Đã đặt thư mục mặc định',
+        'recent_directory_not_found': 'Không tìm thấy thư mục',
+        'recent_file_not_found': 'Không tìm thấy tệp',
+        'recent_remove_selected': 'Xóa',
+        'recent_remove_title': 'Xóa đường dẫn',
+        'recent_remove_confirm': 'Bạn có chắc chắn muốn xóa đường dẫn "{0}" khỏi danh sách?',
+        'recent_path_removed': 'Đã xóa đường dẫn',
+        'recent_clear_all': 'Xóa tất cả',
+        'recent_clear_title': 'Xóa tất cả đường dẫn',
+        'recent_clear_confirm_type': 'Bạn có chắc chắn muốn xóa tất cả {0}?',
+        'recent_cleared': 'Đã xóa danh sách',
+        'recent_path_not_found_title': 'Không tìm thấy đường dẫn',
+        'recent_path_not_found_message': 'Đường dẫn "{0}" không còn tồn tại.',
+        'recent_open_file': 'Mở tệp',
+        'btn_open_recent': 'Mở',
+        'recent_open_file_question': 'Bạn có muốn mở "{0}" dưới dạng PDF?',
+        'recent_not_pdf': 'Tệp được chọn không phải là PDF.',
+        'recent_more_entries': 'Thêm mục...',
+        'btn_remove': 'Xóa',
+        'btn_clear': 'Xóa tất cả',
+        # Recent Paths - Menu ngữ cảnh
+        'recent_context_open': 'Mở',
+        'recent_context_reveal': 'Hiển thị trong Finder',
+        'recent_context_set_default': '⭐ Đặt làm mặc định',
+        'recent_context_open_terminal': '💻 Mở Terminal',
+        'recent_context_file_info': 'Thông tin tệp',
+        'recent_context_open_with_default': '📄 Mở với ứng dụng mặc định',
+        'recent_context_remove': 'Xóa khỏi danh sách',
+        'recent_context_clear_all': 'Xóa tất cả',
+        # Recent Paths - Thông tin tệp
+        'recent_file_info_title': 'Thông tin tệp',
+        'recent_file_info_name': 'Tên',
+        'recent_file_info_path': 'Đường dẫn',
+        'recent_file_info_size': 'Kích thước',
+        'recent_file_info_modified': 'Đã sửa đổi',
+        'recent_file_info_pages': 'Trang',
+        # Recent Paths - Lỗi
+        'recent_error_reveal': 'Lỗi khi mở trong Finder',
+        'recent_error_terminal': 'Lỗi khi mở Terminal',
+        'recent_error_info': 'Lỗi khi lấy thông tin tệp',
+        # USER DATA FOLDER
+        'open_user_folder': 'Hiển thị thư mục dữ liệu người dùng',
+
+        # ============================================
+        # 108. THOÁT CHƯƠNG TRÌNH
+        # ============================================
+        "app_quitting": "Chương trình đang thoát",
 
     }
 

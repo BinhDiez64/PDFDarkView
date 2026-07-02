@@ -3386,7 +3386,78 @@ Tipp: Im Kontextmenü können Sie die Einstellungen anpassen.
         # --> ab hier neu (noch nicht übersetzt)
 
         # ============================================
-        # 107. PROGRAMM BEENDEN
+        # 107. ZULETZT VERWENDETE PFADE
+        # ============================================
+
+        'menu_recent': 'Zuletzt verwendet',
+        'menu_recent_dirs': 'Verzeichnisse...',
+        'menu_recent_files': 'Dateien...',
+        'recent_manage': 'Verwalten...',
+        # Recent Paths - Einstellungen
+        'recent_enable_tracking': 'Zuletzt verwendete Pfade speichern (Datenschutz)',
+        'recent_enable_info': 'Deaktivieren Sie diese Option, um keine Pfade zu speichern',
+        'recent_tracking_disabled': 'Pfadverfolgung deaktiviert',
+        'recent_enabled': 'aktiviert',
+        'recent_disabled': 'deaktiviert',
+        'recent_tracking_status': 'Pfadverfolgung {0}',
+        # Recent Paths - Dialog
+        'recent_dialog_title': 'Zuletzt verwendete Pfade',
+        'recent_tab_directories': 'Verzeichnisse',
+        'recent_tab_files': 'Dateien',
+        'recent_dirs_instruction': 'Doppelklick zum Öffnen des Dateidialogs im Verzeichnis',
+        'recent_files_instruction': 'Doppelklick zum direkten Öffnen der PDF',
+        'recent_no_directories': '(keine Verzeichnisse gespeichert)',
+        'recent_no_files': '(keine Dateien gespeichert)',
+        'recent_default_current': '⭐ Standard: {0}',
+        'recent_set_as_default': '⭐ Als Standard setzen',
+        'recent_default_set_title': 'Standard-Verzeichnis gesetzt',
+        'recent_default_set_message': 'Das Verzeichnis "{0}" wurde als Standard für das Öffnen von PDFs gesetzt.',
+        'recent_default_set_voice': 'Standard-Verzeichnis wurde gesetzt',
+        'recent_directory_not_found': 'Verzeichnis nicht gefunden',
+        'recent_file_not_found': 'Datei nicht gefunden',
+        'recent_remove_selected': 'Entfernen',
+        'recent_remove_title': 'Pfad entfernen',
+        'recent_remove_confirm': 'Möchten Sie den Pfad "{0}" wirklich aus der Liste entfernen?',
+        'recent_path_removed': 'Pfad wurde entfernt',
+        'recent_clear_all': 'Alle entfernen',
+        'recent_clear_title': 'Alle Pfade entfernen',
+        'recent_clear_confirm_type': 'Möchten Sie wirklich alle {0} löschen?',
+        'recent_cleared': 'Liste wurde gelöscht',
+        'recent_path_not_found_title': 'Pfad nicht gefunden',
+        'recent_path_not_found_message': 'Der Pfad "{0}" existiert nicht mehr.',
+        'recent_open_file': 'Datei öffnen',
+        'btn_open_recent': 'Öffnen',
+        'recent_open_file_question': 'Möchten Sie "{0}" als PDF öffnen?',
+        'recent_not_pdf': 'Die ausgewählte Datei ist keine PDF.',
+        'recent_more_entries': 'Weitere Einträge...',
+        'btn_remove': 'Entfernen',
+        'btn_clear': 'Alle löschen',
+        # Recent Paths - Context Menu
+        'recent_context_open': 'Öffnen',
+        'recent_context_reveal': 'Im Finder anzeigen',
+        'recent_context_set_default': '⭐ Als Standard setzen',
+        'recent_context_open_terminal': '💻 Terminal öffnen',
+        'recent_context_file_info': 'Datei-Info',
+        'recent_context_open_with_default': '📄 Mit Standard-App öffnen',
+        'recent_context_remove': 'Aus Liste entfernen',
+        'recent_context_clear_all': 'Alle entfernen',
+
+        # Recent Paths - File Info
+        'recent_file_info_title': 'Datei-Informationen',
+        'recent_file_info_name': 'Name',
+        'recent_file_info_path': 'Pfad',
+        'recent_file_info_size': 'Größe',
+        'recent_file_info_modified': 'Geändert',
+        'recent_file_info_pages': 'Seiten',
+
+        # Recent Paths - Errors
+        'recent_error_reveal': 'Fehler beim Öffnen im Finder',
+        'recent_error_terminal': 'Fehler beim Öffnen des Terminals',
+        'recent_error_info': 'Fehler beim Abrufen der Datei-Info',
+        'open_user_data_folder': 'Benutzerdaten-Verzeichnis anzeigen',
+
+        # ============================================
+        # 108. PROGRAMM BEENDEN
         # ============================================
         "app_quitting": "Programm wird beendet",
 

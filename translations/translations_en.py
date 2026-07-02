@@ -3321,7 +3321,76 @@ Tip: You can adjust settings in the context menu.
         "welcome_download_language": "Yes, download {language}",
 
         # ============================================
-        # 107. PROGRAMM BEENDEN
+        # 107. RECENT PATHS
+        # ============================================
+        'menu_recent': 'Recent',
+        'menu_recent_dirs': 'Directories...',
+        'menu_recent_files': 'Files...',
+        'recent_manage': 'Manage...',
+        # Recent Paths - Settings
+        'recent_enable_tracking': 'Save recent paths (Privacy)',
+        'recent_enable_info': 'Disable this to not save any paths',
+        'recent_tracking_disabled': 'Path tracking disabled',
+        'recent_enabled': 'enabled',
+        'recent_disabled': 'disabled',
+        'recent_tracking_status': 'Path tracking {0}',
+        # Recent Paths - Dialog
+        'recent_dialog_title': 'Recent Paths',
+        'recent_tab_directories': 'Directories',
+        'recent_tab_files': 'Files',
+        'recent_dirs_instruction': 'Double-click to open file dialog in directory',
+        'recent_files_instruction': 'Double-click to open PDF directly',
+        'recent_no_directories': '(no directories saved)',
+        'recent_no_files': '(no files saved)',
+        'recent_default_current': '⭐ Default: {0}',
+        'recent_set_as_default': '⭐ Set as default',
+        'recent_default_set_title': 'Default directory set',
+        'recent_default_set_message': 'Directory "{0}" has been set as default for opening PDFs.',
+        'recent_default_set_voice': 'Default directory has been set',
+        'recent_directory_not_found': 'Directory not found',
+        'recent_file_not_found': 'File not found',
+        'recent_remove_selected': 'Remove',
+        'recent_remove_title': 'Remove path',
+        'recent_remove_confirm': 'Do you really want to remove path "{0}" from the list?',
+        'recent_path_removed': 'Path has been removed',
+        'recent_clear_all': 'Remove all',
+        'recent_clear_title': 'Remove all paths',
+        'recent_clear_confirm_type': 'Do you really want to delete all {0}?',
+        'recent_cleared': 'List has been cleared',
+        'recent_path_not_found_title': 'Path not found',
+        'recent_path_not_found_message': 'Path "{0}" no longer exists.',
+        'recent_open_file': 'Open file',
+        'btn_open_recent': 'Open',
+        'recent_open_file_question': 'Do you want to open "{0}" as PDF?',
+        'recent_not_pdf': 'The selected file is not a PDF.',
+        'recent_more_entries': 'More entries...',
+        'btn_remove': 'Remove',
+        'btn_clear': 'Clear all',
+        # Recent Paths - Context Menu
+        'recent_context_open': 'Open',
+        'recent_context_reveal': 'Show in Finder',
+        'recent_context_set_default': '⭐ Set as default',
+        'recent_context_open_terminal': '💻 Open Terminal',
+        'recent_context_file_info': 'File Info',
+        'recent_context_open_with_default': '📄 Open with default app',
+        'recent_context_remove': 'Remove from list',
+        'recent_context_clear_all': 'Remove all',
+        # Recent Paths - File Info
+        'recent_file_info_title': 'File Information',
+        'recent_file_info_name': 'Name',
+        'recent_file_info_path': 'Path',
+        'recent_file_info_size': 'Size',
+        'recent_file_info_modified': 'Modified',
+        'recent_file_info_pages': 'Pages',
+        # Recent Paths - Errors
+        'recent_error_reveal': 'Error opening in Finder',
+        'recent_error_terminal': 'Error opening terminal',
+        'recent_error_info': 'Error retrieving file info',
+        # USER DATA FOLDER
+        'open_user_data_folder': 'Show user data directory',
+
+        # ============================================
+        # 108. EXIT PROGRAM
         # ============================================
         "app_quitting": "Program is quitting",
 
