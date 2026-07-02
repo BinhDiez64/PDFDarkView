@@ -92,7 +92,7 @@ from PyQt5.QtGui import (QPixmap, QImage, QIcon, QKeyEvent,qRed, qGreen, qBlue, 
 ### AKTUELLE PROGRAMM-VERSION
 ### = GitHub‑Release‑Tag (ohne führendes 'v')
 ### ====================================================
-APP_VERSION = "2.2.0"
+APP_VERSION = "2.3.0"
 
 ### ===================================
 ### VERSIONSVERWALTUNG
@@ -1110,7 +1110,7 @@ class Config:
                         (parent.tr('btn_ok'), "primary", "ok", 100),
                         (parent.tr('btn_retry'), "secondary", "retry", 100)
                     ],
-                    icon_type="warning",
+                    icon_type="",
                     text_alignment=Qt.AlignLeft,
                     default_button="ok"
                 )
@@ -7186,6 +7186,1186 @@ class MasterPasswordSettingsDialog(QDialog):
             self.main_window.say(
                 self.lang.tr('template_auth_disabled') + (" " + self.lang.tr('voice_on') if disabled else " " + self.lang.tr('voice_off'))
             )
+
+### ================================================
+### ZULETZT VERWENDETE PFADE
+### ================================================
+
+class RecentPathsManager:
+    """Verwaltung der zuletzt verwendeten Verzeichnisse und Dateien"""
+
+    MAX_PATHS = 15
+    SETTINGS_KEY_DIRS = "recent_directories"
+    SETTINGS_KEY_FILES = "recent_files"
+    SETTINGS_KEY_ENABLED = "recent_paths_enabled"
+    SETTINGS_KEY_DEFAULT_DIR = "recent_default_directory"
+
+    def __init__(self, viewer=None):
+        """
+        Initialisiert den Manager
+
+        Args:
+            viewer: Referenz auf den PDFViewer (optional, für UI-Updates)
+        """
+        self.viewer = viewer
+        self._directories = []
+        self._files = []
+        self._enabled = True
+        self._default_directory = None
+        self.load()
+
+    def load(self):
+        """Lädt die Listen aus QSettings"""
+        try:
+            settings = QSettings("BinhDiez", "PDFDarkView")
+
+            # Aktiviert/Deaktiviert
+            self._enabled = settings.value(self.SETTINGS_KEY_ENABLED, True, type=bool)
+
+            # Standard-Verzeichnis
+            self._default_directory = settings.value(self.SETTINGS_KEY_DEFAULT_DIR, None)
+            if self._default_directory and not os.path.exists(self._default_directory):
+                self._default_directory = None
+
+            # Verzeichnisse laden
+            self._directories = settings.value(self.SETTINGS_KEY_DIRS, [])
+            if not isinstance(self._directories, list):
+                self._directories = []
+
+            # Nur existierende Verzeichnisse behalten
+            self._directories = [d for d in self._directories if os.path.exists(d)]
+
+            # Duplikate entfernen
+            seen = set()
+            self._directories = [d for d in self._directories if not (d in seen or seen.add(d))]
+
+            # Dateien laden
+            self._files = settings.value(self.SETTINGS_KEY_FILES, [])
+            if not isinstance(self._files, list):
+                self._files = []
+
+            # Nur existierende Dateien behalten
+            self._files = [f for f in self._files if os.path.exists(f)]
+
+            # Duplikate entfernen
+            seen = set()
+            self._files = [f for f in self._files if not (f in seen or seen.add(f))]
+
+        except Exception as e:
+            print(f"Fehler beim Laden der RecentPaths: {e}")
+            self._directories = []
+            self._files = []
+            self._enabled = True
+            self._default_directory = None
+
+    def save(self):
+        """Speichert die Listen in QSettings"""
+        try:
+            settings = QSettings("BinhDiez", "PDFDarkView")
+            settings.setValue(self.SETTINGS_KEY_ENABLED, self._enabled)
+            settings.setValue(self.SETTINGS_KEY_DIRS, self._directories[:self.MAX_PATHS])
+            settings.setValue(self.SETTINGS_KEY_FILES, self._files[:self.MAX_PATHS])
+            if self._default_directory:
+                settings.setValue(self.SETTINGS_KEY_DEFAULT_DIR, self._default_directory)
+            else:
+                settings.remove(self.SETTINGS_KEY_DEFAULT_DIR)
+            settings.sync()
+        except Exception as e:
+            print(f"Fehler beim Speichern der RecentPaths: {e}")
+
+    # ===== ENABLED =====
+
+    def is_enabled(self):
+        """Prüft ob die Funktion aktiviert ist"""
+        return self._enabled
+
+    def set_enabled(self, enabled):
+        """Aktiviert oder deaktiviert die Funktion"""
+        self._enabled = enabled
+        if not enabled:
+            # Bei Deaktivierung: Listen leeren (Datenschutz)
+            self._directories = []
+            self._files = []
+        self.save()
+
+    # ===== DEFAULT DIRECTORY =====
+
+    def get_default_directory(self):
+        """Gibt das Standard-Verzeichnis zurück"""
+        if self._default_directory and os.path.exists(self._default_directory):
+            return self._default_directory
+        return None
+
+    def set_default_directory(self, directory):
+        """Setzt das Standard-Verzeichnis"""
+        if directory and os.path.exists(directory):
+            self._default_directory = os.path.abspath(directory)
+            self.save()
+            return True
+        return False
+
+    def clear_default_directory(self):
+        """Löscht das Standard-Verzeichnis"""
+        self._default_directory = None
+        self.save()
+
+    # ===== DIRECTORIES =====
+
+    def add_directory(self, directory):
+        """
+        Fügt ein Verzeichnis hinzu oder schiebt es nach vorne
+
+        Args:
+            directory: Das Verzeichnis
+        """
+        if not self._enabled or not directory:
+            return
+
+        # Normierung
+        directory = os.path.abspath(directory)
+        if not os.path.exists(directory):
+            return
+
+        # Wenn es eine Datei ist, nimm das Verzeichnis
+        if os.path.isfile(directory):
+            directory = os.path.dirname(directory)
+            if not directory or not os.path.exists(directory):
+                return
+
+        # Bereits vorhanden? Dann nach vorne schieben
+        if directory in self._directories:
+            self._directories.remove(directory)
+
+        # Vorne einfügen
+        self._directories.insert(0, directory)
+
+        # Auf maximale Anzahl begrenzen
+        self._directories = self._directories[:self.MAX_PATHS]
+
+        self.save()
+
+    def get_directories(self):
+        """Gibt die Liste der gespeicherten Verzeichnisse zurück"""
+        return self._directories.copy()
+
+    def get_directory_count(self):
+        """Gibt die Anzahl der gespeicherten Verzeichnisse zurück"""
+        return len(self._directories)
+
+    def get_first_directory(self, default=None):
+        """Gibt das erste (neueste) Verzeichnis zurück"""
+        return self._directories[0] if self._directories else default
+
+    def get_directories_with_display_names(self, max_items=10):
+        """
+        Gibt eine Liste von (Pfad, Anzeigename, Index)-Tupeln für Verzeichnisse zurück
+
+        Args:
+            max_items: Maximale Anzahl der zurückgegebenen Einträge
+        """
+        result = []
+        for i, path in enumerate(self._directories[:max_items]):
+            # Anzeigename: Basisname des Verzeichnisses
+            display_name = os.path.basename(path)
+            if not display_name:  # Fallback für Root-Verzeichnisse
+                display_name = path
+
+            # Kürzen bei länger als 45 Zeichen
+            if len(display_name) > 45:
+                display_name = display_name[:42] + "..."
+
+            result.append((path, display_name, i + 1))
+
+        return result
+
+    def remove_directory(self, path):
+        """Entfernt ein bestimmtes Verzeichnis"""
+        path = os.path.abspath(path)
+        if path in self._directories:
+            self._directories.remove(path)
+            self.save()
+            return True
+        return False
+
+    def clear_directories(self):
+        """Löscht alle gespeicherten Verzeichnisse"""
+        self._directories = []
+        self.save()
+
+    # ===== FILES =====
+
+    def add_file(self, filepath):
+        """
+        Fügt eine Datei hinzu oder schiebt sie nach vorne
+
+        Args:
+            filepath: Der Dateipfad
+        """
+        if not self._enabled or not filepath:
+            return
+
+        filepath = os.path.abspath(filepath)
+        if not os.path.exists(filepath) or not os.path.isfile(filepath):
+            return
+
+        # Bereits vorhanden? Dann nach vorne schieben
+        if filepath in self._files:
+            self._files.remove(filepath)
+
+        # Vorne einfügen
+        self._files.insert(0, filepath)
+
+        # Auf maximale Anzahl begrenzen
+        self._files = self._files[:self.MAX_PATHS]
+
+        self.save()
+
+    def get_files(self):
+        """Gibt die Liste der gespeicherten Dateien zurück"""
+        return self._files.copy()
+
+    def get_file_count(self):
+        """Gibt die Anzahl der gespeicherten Dateien zurück"""
+        return len(self._files)
+
+    def get_first_file(self, default=None):
+        """Gibt die erste (neueste) Datei zurück"""
+        return self._files[0] if self._files else default
+
+    def get_files_with_display_names(self, max_items=10):
+        """
+        Gibt eine Liste von (Pfad, Anzeigename, Index)-Tupeln für Dateien zurück
+
+        Args:
+            max_items: Maximale Anzahl der zurückgegebenen Einträge
+        """
+        result = []
+        for i, path in enumerate(self._files[:max_items]):
+            # Anzeigename: Dateiname
+            display_name = os.path.basename(path)
+            if not display_name:
+                display_name = path
+
+            # Kürzen bei länger als 45 Zeichen
+            if len(display_name) > 45:
+                display_name = display_name[:42] + "..."
+
+            result.append((path, display_name, i + 1))
+
+        return result
+
+    def remove_file(self, path):
+        """Entfernt eine bestimmte Datei"""
+        path = os.path.abspath(path)
+        if path in self._files:
+            self._files.remove(path)
+            self.save()
+            return True
+        return False
+
+    def clear_files(self):
+        """Löscht alle gespeicherten Dateien"""
+        self._files = []
+        self.save()
+
+    # ===== BOTH =====
+
+    def add_both(self, filepath):
+        """
+        Fügt sowohl Datei als auch Verzeichnis hinzu
+
+        Args:
+            filepath: Der Dateipfad
+        """
+        if not self._enabled or not filepath:
+            return
+
+        # Datei hinzufügen
+        self.add_file(filepath)
+
+        # Verzeichnis hinzufügen
+        directory = os.path.dirname(filepath)
+        if directory and os.path.exists(directory):
+            self.add_directory(directory)
+
+    def clear_all(self):
+        """Löscht alle gespeicherten Pfade"""
+        self._directories = []
+        self._files = []
+        self.save()
+
+    def is_empty(self):
+        """Prüft ob alle Listen leer sind"""
+        return len(self._directories) == 0 and len(self._files) == 0
+
+    # ===== START DIRECTORY =====
+
+    def get_start_directory(self, default=None):
+        """
+        Gibt das Startverzeichnis für Dateidialoge zurück
+
+        Priorität:
+        1. Standard-Verzeichnis (wenn gesetzt)
+        2. Neuestes Verzeichnis aus der Liste
+        3. Fallback
+
+        Args:
+            default: Fallback-Verzeichnis
+
+        Returns:
+            str: Startverzeichnis
+        """
+        if not self._enabled:
+            return default if default and os.path.exists(default) else os.path.expanduser("~/Documents")
+
+        # 1. Standard-Verzeichnis
+        default_dir = self.get_default_directory()
+        if default_dir and os.path.exists(default_dir):
+            return default_dir
+
+        # 2. Neuestes Verzeichnis
+        first_dir = self.get_first_directory()
+        if first_dir and os.path.exists(first_dir):
+            return first_dir
+
+        # 3. Fallback
+        if default and os.path.exists(default):
+            return default
+
+        return os.path.expanduser("~/Documents")
+
+    def refresh(self):
+        """Aktualisiert die Listen (entfernt nicht mehr existierende Einträge)"""
+        self.load()
+        self.save()
+
+class RecentPathsDialog(QDialog):
+    """Dialog für die Verwaltung der zuletzt verwendeten Pfade mit Kontextmenü"""
+
+    def __init__(self, parent=None, recent_manager=None):
+        """
+        Initialisiert den Dialog
+
+        Args:
+            parent: Eltern-Widget (PDFViewer)
+            recent_manager: RecentPathsManager-Instanz
+        """
+        super().__init__(parent)
+        self.parent_window = parent
+        self.recent_manager = recent_manager
+        self.selected_path = None
+        self.current_tab = 0  # 0 = Verzeichnisse, 1 = Dateien
+
+        # Language-Instanz vom Hauptfenster übernehmen
+        if parent and hasattr(parent, 'lang'):
+            self.lang = parent.lang
+        else:
+            self.lang = Language()
+
+        # Sprachansage
+        if self.parent_window and hasattr(self.parent_window, 'voice_enabled') and self.parent_window.voice_enabled:
+            if hasattr(self.parent_window, 'say'):
+                self.parent_window.say(self.lang.tr('recent_dialog_title'))
+
+        self.setup_ui()
+        self.load_paths()
+
+    def setup_ui(self):
+        """Erstellt die UI mit Kopfbereich, Tabs und Buttons"""
+        # --- Bildschirmgröße für maximale Dialogmaße ermitteln ---
+        screen = QApplication.primaryScreen()
+        screen_geometry = screen.availableGeometry()
+        max_dialog_height = int(screen_geometry.height() * 0.8)
+        max_dialog_width = int(screen_geometry.width() * 0.7)
+
+        self.setWindowTitle(self.lang.tr('recent_dialog_title'))
+        self.setMinimumSize(550, 450)
+        self.setMaximumSize(max_dialog_width, max_dialog_height)
+        self.setSizeGripEnabled(True)
+
+        base_font = QFont()
+        base_font.setPointSize(14)
+        self.setFont(base_font)
+
+        # Hauptlayout
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(10, 10, 10, 10)
+        main_layout.setSpacing(12)
+
+        # ========== 1. Kopfbereich (Header) ==========
+        header = self._create_header()
+        main_layout.addWidget(header)
+
+        # ========== 2. Einstellungen (Checkbox) ==========
+        settings_group = self._create_settings_group()
+        main_layout.addWidget(settings_group)
+
+        # ========== 3. TabWidget für Verzeichnisse/Dateien ==========
+        self.tab_widget = self._create_tab_widget()
+        main_layout.addWidget(self.tab_widget, 1)
+
+        # ========== 4. Fussbereich (Buttons) ==========
+        button_layout = self._create_button_area()
+        main_layout.addLayout(button_layout)
+
+        # ========== 5. Globaler Style ==========
+        self.setStyleSheet("""
+            QDialog, QWidget {
+                background-color: #1E1E1E;
+                color: #FFFFFF;
+            }
+            QLabel {
+                color: #FFFFFF;
+            }
+        """)
+
+        # Dynamische Größenanpassung
+        self.adjustSize()
+        if self.height() > max_dialog_height:
+            self.resize(self.width(), max_dialog_height)
+        if self.width() > max_dialog_width:
+            self.resize(max_dialog_width, self.height())
+
+    def _create_header(self):
+        """Erstellt den Kopfbereich mit Logo und Titel"""
+        header = QWidget()
+        header_layout = QHBoxLayout(header)
+        header_layout.setContentsMargins(0, 0, 0, 10)
+
+        # Logo
+        header_layout.addStretch()
+        if os.path.exists(Config.IMAGE_PATH):
+            logo_label = QLabel()
+            logo_pixmap = QPixmap(Config.IMAGE_PATH).scaled(
+                70, 70, Qt.KeepAspectRatio, Qt.SmoothTransformation
+            )
+            logo_label.setPixmap(logo_pixmap)
+            header_layout.addWidget(logo_label)
+
+        header_layout.addStretch()
+
+        # Titel
+        title_label = QLabel(self.lang.tr('recent_dialog_title'))
+        title_label.setAlignment(Qt.AlignCenter)
+        title_label.setStyleSheet("font-size: 20px; font-weight: bold; color: white;")
+        header_layout.addWidget(title_label)
+
+        header_layout.addStretch()
+
+        # App Icon
+        if os.path.exists(Config.APP_ICON_PATH):
+            icon_label = QLabel()
+            icon_pixmap = QPixmap(Config.APP_ICON_PATH).scaled(
+                60, 60, Qt.KeepAspectRatio, Qt.SmoothTransformation
+            )
+            icon_label.setPixmap(icon_pixmap)
+            header_layout.addWidget(icon_label)
+
+        header_layout.addStretch()
+
+        return header
+
+    def _create_settings_group(self):
+        """Erstellt die Einstellungsgruppe mit der Aktivierungs-Checkbox"""
+        group = QGroupBox()
+        group.setStyleSheet("""
+            QGroupBox {
+                border: 1px solid #444;
+                border-radius: 6px;
+                margin-top: 8px;
+                padding-top: 10px;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 12px;
+                padding: 0 5px;
+                color: #AAAAAA;
+            }
+        """)
+
+        layout = QHBoxLayout()
+        layout.setContentsMargins(15, 5, 15, 10)
+
+        self.enabled_checkbox = QCheckBox(self.lang.tr('recent_enable_tracking'))
+        self.enabled_checkbox.setChecked(self.recent_manager.is_enabled())
+        self.enabled_checkbox.setStyleSheet("""
+            QCheckBox {
+                spacing: 8px;
+                color: #FFFFFF;
+                font-size: 14px;
+            }
+            QCheckBox::indicator {
+                width: 18px;
+                height: 18px;
+            }
+        """)
+        self.enabled_checkbox.toggled.connect(self._on_enabled_toggled)
+        layout.addWidget(self.enabled_checkbox)
+
+        layout.addStretch()
+
+        # Info-Text
+        info_label = QLabel(self.lang.tr('recent_enable_info'))
+        info_label.setStyleSheet("color: #888888; font-size: 11px; font-style: italic;")
+        layout.addWidget(info_label)
+
+        group.setLayout(layout)
+        return group
+
+    def _create_tab_widget(self):
+        """Erstellt das TabWidget mit Verzeichnissen und Dateien"""
+        tab_widget = QTabWidget()
+        tab_widget.setStyleSheet("""
+            QTabWidget::pane {
+                border: 1px solid #444;
+                border-radius: 6px;
+                background-color: #1E1E1E;
+            }
+            QTabBar::tab {
+                background-color: #2D2D2D;
+                color: #FFFFFF;
+                padding: 8px 20px;
+                margin-right: 4px;
+                border-top-left-radius: 4px;
+                border-top-right-radius: 4px;
+                font-size: 14px;
+            }
+            QTabBar::tab:selected {
+                background-color: #197602;
+            }
+            QTabBar::tab:hover {
+                background-color: #3D3D3D;
+            }
+        """)
+
+        # Tab 1: Verzeichnisse
+        self.dirs_tab = QWidget()
+        self._setup_tab(self.dirs_tab, "directories")
+        tab_widget.addTab(self.dirs_tab, self.lang.tr('recent_tab_directories'))
+
+        # Tab 2: Dateien
+        self.files_tab = QWidget()
+        self._setup_tab(self.files_tab, "files")
+        tab_widget.addTab(self.files_tab, self.lang.tr('recent_tab_files'))
+
+        # Tab-Wechsel verbinden
+        tab_widget.currentChanged.connect(self._on_tab_changed)
+
+        return tab_widget
+
+    def _setup_tab(self, tab, tab_type):
+        """Richtet einen Tab ein"""
+        layout = QVBoxLayout(tab)
+        layout.setContentsMargins(10, 10, 10, 10)
+        layout.setSpacing(8)
+
+        # Info-Label
+        if tab_type == "directories":
+            info_text = self.lang.tr('recent_dirs_instruction')
+        else:
+            info_text = self.lang.tr('recent_files_instruction')
+
+        info_label = QLabel(info_text)
+        info_label.setWordWrap(True)
+        info_label.setStyleSheet("color: #AAAAAA; font-size: 13px; padding: 5px;")
+        layout.addWidget(info_label)
+
+        # Liste
+        list_widget = QListWidget()
+        list_widget.setObjectName(f"list_{tab_type}")
+        list_widget.setStyleSheet("""
+            QListWidget {
+                background-color: #2D2D2D;
+                border: none;
+                border-radius: 4px;
+                color: #FFFFFF;
+                font-size: 14px;
+                outline: none;
+            }
+            QListWidget::item {
+                padding: 8px 12px;
+                border-bottom: 1px solid #3D3D3D;
+            }
+            QListWidget::item:selected {
+                background-color: #197602;
+                color: white;
+            }
+            QListWidget::item:hover {
+                background-color: #3D3D3D;
+            }
+        """)
+        list_widget.itemDoubleClicked.connect(self._on_item_double_clicked)
+        list_widget.currentItemChanged.connect(self._on_selection_changed)
+
+        # Kontextmenü für die Liste aktivieren
+        list_widget.setContextMenuPolicy(Qt.CustomContextMenu)
+        list_widget.customContextMenuRequested.connect(self._show_context_menu)
+
+        layout.addWidget(list_widget, 1)
+
+        # Speichern als Attribut
+        setattr(self, f"list_{tab_type}", list_widget)
+        setattr(self, f"tab_type_{tab_type}", tab_type)
+
+    def _create_button_area(self):
+        """Erstellt den Button-Bereich"""
+        button_layout = QHBoxLayout()
+        button_layout.setSpacing(10)
+
+        # Löschen-Button
+        self.btn_remove = QPushButton(self.lang.tr('recent_remove_selected'))
+        if self.parent_window:
+            self.parent_window.style_button(self.btn_remove, 'danger', (160, 25))
+        else:
+            self.btn_remove.setFixedSize(160, 25)
+            self.btn_remove.setStyleSheet("""
+                QPushButton {
+                    background-color: #C62828;
+                    border-radius: 8px;
+                    padding: 4px 12px;
+                    color: white;
+                    font-weight: bold;
+                }
+                QPushButton:hover { background-color: #8E0000; }
+                QPushButton:disabled { background-color: #666; color: #999; }
+            """)
+        self.btn_remove.clicked.connect(self._remove_selected)
+        self.btn_remove.setEnabled(False)
+        button_layout.addWidget(self.btn_remove)
+
+        # Alle löschen-Button
+        self.btn_clear_all = QPushButton(self.lang.tr('recent_clear_all'))
+        if self.parent_window:
+            self.parent_window.style_button(self.btn_clear_all, 'danger', (160, 25))
+        else:
+            self.btn_clear_all.setFixedSize(200, 25)
+            self.btn_clear_all.setStyleSheet("""
+                QPushButton {
+                    background-color: #C62828;
+                    border-radius: 8px;
+                    padding: 4px 12px;
+                    color: white;
+                    font-weight: bold;
+                }
+                QPushButton:hover { background-color: #8E0000; }
+                QPushButton:disabled { background-color: #666; color: #999; }
+            """)
+        self.btn_clear_all.clicked.connect(self._clear_all)
+        button_layout.addWidget(self.btn_clear_all)
+
+        button_layout.addStretch()
+
+        # Als Startverzeichnis setzen-Button
+        self.btn_set_default = QPushButton(self.lang.tr('recent_set_as_default'))
+        if self.parent_window:
+            self.parent_window.style_button(self.btn_set_default, 'primary', (180, 25))
+        else:
+            self.btn_set_default.setFixedSize(180, 25)
+            self.btn_set_default.setStyleSheet("""
+                QPushButton {
+                    background-color: #1565C0;
+                    border-radius: 8px;
+                    padding: 4px 12px;
+                    color: white;
+                    font-weight: bold;
+                }
+                QPushButton:hover { background-color: #0d47a1; }
+                QPushButton:disabled { background-color: #666; color: #999; }
+            """)
+        self.btn_set_default.clicked.connect(self._set_as_default)
+        self.btn_set_default.setEnabled(False)
+        button_layout.addWidget(self.btn_set_default)
+
+        # Öffnen-Button
+        self.btn_open = QPushButton(self.lang.tr('btn_open_recent'))
+        if self.parent_window:
+            self.parent_window.style_button(self.btn_open, 'success', (120, 25))
+        else:
+            self.btn_open.setFixedSize(120, 25)
+            self.btn_open.setStyleSheet("""
+                QPushButton {
+                    background-color: #2E7D32;
+                    border-radius: 8px;
+                    padding: 4px 12px;
+                    color: white;
+                    font-weight: bold;
+                }
+                QPushButton:hover { background-color: #1B5E20; }
+                QPushButton:disabled { background-color: #666; color: #999; }
+            """)
+        self.btn_open.clicked.connect(self._open_selected)
+        self.btn_open.setEnabled(False)
+        button_layout.addWidget(self.btn_open)
+
+        # Schließen-Button
+        self.btn_close = QPushButton(self.lang.tr('btn_close'))
+        if self.parent_window:
+            self.parent_window.style_button(self.btn_close, 'brown', (120, 25))
+        else:
+            self.btn_close.setFixedSize(120, 25)
+            self.btn_close.setStyleSheet("""
+                QPushButton {
+                    background-color: #5D4037;
+                    border-radius: 8px;
+                    padding: 4px 12px;
+                    color: white;
+                    font-weight: bold;
+                }
+                QPushButton:hover { background-color: #3E2723; }
+            """)
+        self.btn_close.clicked.connect(self.accept)
+        #  button_layout.addWidget(self.btn_close)
+
+        return button_layout
+
+    def load_paths(self):
+        """Lädt die Pfade in die Listen"""
+        self._load_tab("directories")
+        self._load_tab("files")
+        self._update_button_states()
+
+    def _load_tab(self, tab_type):
+        """Lädt einen bestimmten Tab"""
+        list_widget = getattr(self, f"list_{tab_type}")
+        list_widget.clear()
+
+        if not self.recent_manager.is_enabled():
+            # Deaktiviert: Info anzeigen
+            item = QListWidgetItem(self.lang.tr('recent_tracking_disabled'))
+            item.setFlags(Qt.NoItemFlags)
+            item.setTextAlignment(Qt.AlignCenter)
+            item.setForeground(Qt.gray)
+            list_widget.addItem(item)
+            return
+
+        if tab_type == "directories":
+            items = self.recent_manager.get_directories_with_display_names(max_items=15)
+            empty_text = self.lang.tr('recent_no_directories')
+            icon = "📁"
+        else:  # files
+            items = self.recent_manager.get_files_with_display_names(max_items=15)
+            empty_text = self.lang.tr('recent_no_files')
+            icon = "📄"
+
+        if not items:
+            item = QListWidgetItem(empty_text)
+            item.setFlags(Qt.NoItemFlags)
+            item.setTextAlignment(Qt.AlignCenter)
+            item.setForeground(Qt.gray)
+            list_widget.addItem(item)
+            return
+
+        for path, display_name, index in items:
+            # Kurzen Namen für Anzeige
+            item_text = f"{index:2d}. {icon} {display_name}"
+            item = QListWidgetItem(item_text)
+            item.setData(Qt.UserRole, path)
+            item.setToolTip(path)  # Vollständiger Pfad als Tooltip
+
+            # Zusätzliche Info: Erstellungsdatum oder Größe (optional)
+            if tab_type == "files" and os.path.exists(path):
+                try:
+                    mtime = os.path.getmtime(path)
+                    import datetime
+                    date_str = datetime.datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M")
+                    item.setToolTip(f"{path}\nZuletzt geändert: {date_str}")
+                except:
+                    pass
+
+            list_widget.addItem(item)
+
+        # Falls mehr als 15, "..." Eintrag hinzufügen
+        count = self.recent_manager.get_directory_count() if tab_type == "directories" else self.recent_manager.get_file_count()
+        if count > 15:
+            more_item = QListWidgetItem("...")
+            more_item.setFlags(Qt.NoItemFlags)
+            more_item.setTextAlignment(Qt.AlignCenter)
+            more_item.setForeground(Qt.gray)
+            more_item.setToolTip(self.lang.tr('recent_more_entries'))
+            list_widget.addItem(more_item)
+
+    def _get_current_list(self):
+        """Gibt das aktuelle ListWidget zurück"""
+        current_index = self.tab_widget.currentIndex()
+        if current_index == 0:
+            return self.list_directories, "directories"
+        else:
+            return self.list_files, "files"
+
+    def _get_selected_path(self):
+        """Gibt den ausgewählten Pfad zurück"""
+        list_widget, _ = self._get_current_list()
+        current_item = list_widget.currentItem()
+        if current_item and current_item.flags() != Qt.NoItemFlags:
+            return current_item.data(Qt.UserRole)
+        return None
+
+    def _get_selected_item_type(self):
+        """Gibt den Typ des ausgewählten Items zurück"""
+        _, tab_type = self._get_current_list()
+        return tab_type  # "directories" oder "files"
+
+    def _on_tab_changed(self, index):
+        """Wird aufgerufen wenn der Tab gewechselt wird"""
+        self._update_button_states()
+        self.current_tab = index
+
+    def _on_selection_changed(self, current, previous):
+        """Aktiviert/deaktiviert Buttons basierend auf Auswahl"""
+        self._update_button_states()
+
+    def _update_button_states(self):
+        """Aktualisiert die Button-Zustände"""
+        list_widget, tab_type = self._get_current_list()
+        current_item = list_widget.currentItem()
+
+        # Sicherstellen, dass has_valid_selection ein bool ist
+        has_valid_selection = bool(current_item and current_item.flags() != Qt.NoItemFlags)
+
+        self.btn_open.setEnabled(has_valid_selection and self.recent_manager.is_enabled())
+        self.btn_remove.setEnabled(has_valid_selection and self.recent_manager.is_enabled())
+        self.btn_set_default.setEnabled(
+            has_valid_selection and
+            tab_type == "directories" and
+            self.recent_manager.is_enabled()
+        )
+
+        # Clear-All nur aktivieren wenn Liste nicht leer ist
+        count = self.recent_manager.get_directory_count() if tab_type == "directories" else self.recent_manager.get_file_count()
+        self.btn_clear_all.setEnabled(count > 0 and self.recent_manager.is_enabled())
+
+    def _on_item_double_clicked(self, item):
+        """Öffnet den Pfad bei Doppelklick"""
+        if item and item.flags() != Qt.NoItemFlags and self.recent_manager.is_enabled():
+            self._open_selected()
+
+    # ============================================================
+    # KONTEXTMENÜ
+    # ============================================================
+
+    def _show_context_menu(self, position):
+        """Zeigt das Kontextmenü für das ausgewählte Item"""
+        list_widget, tab_type = self._get_current_list()
+        item = list_widget.itemAt(position)
+
+        if not item or item.flags() == Qt.NoItemFlags:
+            return
+
+        path = item.data(Qt.UserRole)
+        if not path:
+            return
+
+        # Ausgewähltes Item markieren
+        list_widget.setCurrentItem(item)
+
+        # Kontextmenü erstellen
+        menu = QMenu(self)
+        menu.setStyleSheet("""
+            QMenu {
+                background-color: #3D3D3D;
+                color: #E0E0E0;
+                border: 1px solid #555555;
+                min-width: 200px;
+            }
+            QMenu::item {
+                padding: 6px 20px 6px 10px;
+            }
+            QMenu::item:selected {
+                background-color: #1565C0;
+                color: white;
+            }
+            QMenu::separator {
+                height: 1px;
+                background: #555555;
+                margin: 4px 8px;
+            }
+        """)
+
+        # ===== ALLGEMEINE AKTIONEN =====
+
+        # Öffnen
+        open_action = QAction(self.lang.tr('recent_context_open'), self)
+        open_action.triggered.connect(self._open_selected)
+        menu.addAction(open_action)
+
+        # # Im Finder/Explorer öffnen
+        # reveal_action = QAction(self.lang.tr('recent_context_reveal'), self)
+        # reveal_action.triggered.connect(lambda: self._reveal_in_file_manager(path))
+        # menu.addAction(reveal_action)
+
+        menu.addSeparator()
+
+        # ===== VERZEICHNIS-SPEZIFISCHE AKTIONEN =====
+
+        if tab_type == "directories":
+            # Als Standard setzen
+            default_action = QAction(self.lang.tr('recent_context_set_default'), self)
+            default_action.triggered.connect(self._set_as_default)
+            menu.addAction(default_action)
+
+            menu.addSeparator()
+
+        # ===== DATEI-SPEZIFISCHE AKTIONEN =====
+
+        if tab_type == "files":
+            # Dateiinfo anzeigen
+            info_action = QAction(self.lang.tr('recent_context_file_info'), self)
+            info_action.triggered.connect(lambda: self._show_file_info(path))
+            menu.addAction(info_action)
+
+        menu.addSeparator()
+
+        # ===== LÖSCH-AKTIONEN =====
+
+        # Ausgewählten entfernen
+        remove_action = QAction(self.lang.tr('recent_context_remove'), self)
+        remove_action.triggered.connect(self._remove_selected)
+        menu.addAction(remove_action)
+
+        # Alle löschen (des aktuellen Tabs)
+        clear_action = QAction(self.lang.tr('recent_context_clear_all'), self)
+        clear_action.triggered.connect(self._clear_all)
+        menu.addAction(clear_action)
+
+        # Menü anzeigen
+        menu.exec_(QCursor.pos())
+
+    # ============================================================
+    # KONTEXTMENÜ-AKTIONEN
+    # ============================================================
+
+    def _reveal_in_file_manager(self, path):
+        """Öffnet den Pfad im Dateimanager"""
+        if not os.path.exists(path):
+            self._show_path_not_found(path)
+            return
+
+        try:
+            if sys.platform == 'darwin':  # macOS
+                subprocess.Popen(['open', '-R', path])
+            elif sys.platform == 'win32':  # Windows
+                # Bei Windows: Explorer mit markierter Datei öffnen
+                if os.path.isfile(path):
+                    subprocess.Popen(['explorer', '/select,', path])
+                else:
+                    subprocess.Popen(['explorer', path])
+            else:  # Linux
+                if os.path.isfile(path):
+                    subprocess.Popen(['xdg-open', os.path.dirname(path)])
+                else:
+                    subprocess.Popen(['xdg-open', path])
+        except Exception as e:
+            QMessageBox.warning(self, self.lang.tr('error'),
+                               f"{self.lang.tr('recent_error_reveal')}: {str(e)}")
+
+    def _open_terminal(self, path):
+        """Öffnet ein Terminal im angegebenen Verzeichnis"""
+        if not os.path.exists(path):
+            self._show_path_not_found(path)
+            return
+
+        try:
+            if sys.platform == 'darwin':  # macOS
+                # Terminal.app öffnen
+                script = f'tell application "Terminal" to do script "cd \\"{path}\\""'
+                subprocess.Popen(['osascript', '-e', script])
+            elif sys.platform == 'win32':  # Windows
+                subprocess.Popen(['cmd', '/K', 'cd', '/d', path])
+            else:  # Linux
+                # Verschiedene Terminal-Emulatoren versuchen
+                terminals = ['gnome-terminal', 'konsole', 'xfce4-terminal', 'xterm']
+                for term in terminals:
+                    try:
+                        subprocess.Popen([term, '--working-directory', path])
+                        break
+                    except FileNotFoundError:
+                        continue
+        except Exception as e:
+            QMessageBox.warning(self, self.lang.tr('error'),
+                               f"{self.lang.tr('recent_error_terminal')}: {str(e)}")
+
+    def _open_with_default_app(self, path):
+        """Öffnet die Datei mit der Standard-App"""
+        if not os.path.exists(path):
+            self._show_path_not_found(path)
+            return
+
+        try:
+            if sys.platform == 'darwin':  # macOS
+                subprocess.Popen(['open', path])
+            elif sys.platform == 'win32':  # Windows
+                os.startfile(path)
+            else:  # Linux
+                subprocess.Popen(['xdg-open', path])
+        except Exception as e:
+            QMessageBox.warning(self, self.lang.tr('error'),
+                               f"{self.lang.tr('recent_error_open_with')}: {str(e)}")
+
+    def _show_file_info(self, path):
+        """Zeigt Informationen über die ausgewählte PDF-Datei an."""
+        if not os.path.exists(path):
+            self._show_path_not_found(path)
+            return
+
+        if self.parent_window and hasattr(self.parent_window, 'show_pdf_info_for_path'):
+            self.parent_window.show_pdf_info_for_path(path)
+
+
+    # ============================================================
+    # HAUPTAKTIONEN (wie zuvor)
+    # ============================================================
+
+    def _open_selected(self):
+        """Öffnet den ausgewählten Pfad"""
+        if not self.recent_manager.is_enabled():
+            return
+
+        path = self._get_selected_path()
+        if not path:
+            return
+
+        if not os.path.exists(path):
+            self._show_path_not_found(path)
+            tab_type = self._get_selected_item_type()
+            if tab_type == "directories":
+                self.recent_manager.remove_directory(path)
+            else:
+                self.recent_manager.remove_file(path)
+            self.load_paths()
+            return
+
+        self.selected_path = path
+        self.accept()
+
+    def _set_as_default(self):
+        """Setzt das ausgewählte Verzeichnis als Standard"""
+        if not self.recent_manager.is_enabled():
+            return
+
+        path = self._get_selected_path()
+        if not path:
+            return
+
+        if not os.path.exists(path):
+            self._show_path_not_found(path)
+            return
+
+        if self.recent_manager.set_default_directory(path):
+            myUniversalDialog(
+                self,
+                title=self.lang.tr('recent_default_set_title'),
+                message=self.lang.tr('recent_default_set_message', path),
+                buttons=[(self.lang.tr('btn_ok'), "success", "ok")],
+                icon_type="success"
+            ).exec_()
+
+            if self.parent_window and hasattr(self.parent_window, 'say'):
+                self.parent_window.say(self.lang.tr('recent_default_set_voice'))
+
+            if self.parent_window and hasattr(self.parent_window, 'update_recent_menu'):
+                self.parent_window.update_recent_menu()
+
+    def _remove_selected(self):
+        """Entfernt den ausgewählten Pfad aus der Liste"""
+        if not self.recent_manager.is_enabled():
+            return
+
+        list_widget, tab_type = self._get_current_list()
+        current_item = list_widget.currentItem()
+        if not current_item or current_item.flags() == Qt.NoItemFlags:
+            return
+
+        path = current_item.data(Qt.UserRole)
+        if not path:
+            return
+
+        dialog = myUniversalDialog(
+            self,
+            title=self.lang.tr('recent_remove_title'),
+            message=self.lang.tr('recent_remove_confirm', os.path.basename(path) or path),
+            buttons=[
+                (self.lang.tr('btn_remove'), "danger", "remove"),
+                (self.lang.tr('btn_cancel'), "secondary", "cancel")
+            ],
+            icon_type=""
+        )
+        dialog.exec_()
+
+        if dialog.result_value == "remove":
+            if tab_type == "directories":
+                self.recent_manager.remove_directory(path)
+            else:
+                self.recent_manager.remove_file(path)
+            self.load_paths()
+
+            if self.parent_window and hasattr(self.parent_window, 'say'):
+                self.parent_window.say(self.lang.tr('recent_path_removed'))
+
+    def _clear_all(self):
+        """Löscht alle Pfade des aktuellen Tabs"""
+        if not self.recent_manager.is_enabled():
+            return
+
+        _, tab_type = self._get_current_list()
+
+        if tab_type == "directories" and self.recent_manager.get_directory_count() == 0:
+            return
+        if tab_type == "files" and self.recent_manager.get_file_count() == 0:
+            return
+
+        type_name = self.lang.tr('recent_tab_directories') if tab_type == "directories" else self.lang.tr('recent_tab_files')
+
+        dialog = myUniversalDialog(
+            self,
+            title=self.lang.tr('recent_clear_title'),
+            message=self.lang.tr('recent_clear_confirm_type', type_name),
+            buttons=[
+                (self.lang.tr('btn_clear'), "danger", "clear"),
+                (self.lang.tr('btn_cancel'), "secondary", "cancel")
+            ],
+            icon_type=""
+        )
+        dialog.exec_()
+
+        if dialog.result_value == "clear":
+            if tab_type == "directories":
+                self.recent_manager.clear_directories()
+            else:
+                self.recent_manager.clear_files()
+            self.load_paths()
+
+            if self.parent_window and hasattr(self.parent_window, 'say'):
+                self.parent_window.say(self.lang.tr('recent_cleared'))
+
+    def _on_enabled_toggled(self, checked):
+        """Aktiviert/deaktiviert die Funktion"""
+        self.recent_manager.set_enabled(checked)
+        self.load_paths()
+
+        if self.parent_window:
+            status = self.lang.tr('recent_enabled') if checked else self.lang.tr('recent_disabled')
+            self.parent_window.statusBar().showMessage(
+                self.lang.tr('recent_tracking_status', status), 3000
+            )
+            if hasattr(self.parent_window, 'say'):
+                self.parent_window.say(self.lang.tr('recent_tracking_status', status))
+
+        if self.parent_window and hasattr(self.parent_window, 'update_recent_menu'):
+            self.parent_window.update_recent_menu()
+
+    def _show_path_not_found(self, path):
+        """Zeigt eine Meldung, dass der Pfad nicht existiert"""
+        myUniversalDialog(
+            self,
+            title=self.lang.tr('recent_path_not_found_title'),
+            message=self.lang.tr('recent_path_not_found_message', path),
+            buttons=[(self.lang.tr('btn_ok'), "primary", "ok")],
+            icon_type=""
+        ).exec_()
+
+    def get_selected_path(self):
+        """Gibt den ausgewählten Pfad zurück (für externe Nutzung)"""
+        return self.selected_path
 
 ### ================================================
 ### PDF Laden mit Fortschrittsanzeige und Dark Mode
@@ -32250,7 +33430,7 @@ def get_predefined_ocr_options():
             ("Abbrechen", "danger", "cancel"),
             ("Hilfe", "primary", "help")
         ],
-        icon_type="info",                                # Icon anzeigen
+        icon_type="",                                # Icon anzeigen
         default_button="save",                           # Vorauswahl
         text_alignment=Qt.AlignLeft,                     # Linksbündig
         selectable_text=True,                            # Text markierbar
@@ -33439,6 +34619,9 @@ class PDFViewer(QMainWindow):
         # App Einstellungen laden
         self.load_app_settings()
 
+        # zuletzt verwendete Pfade
+        self.recent_paths = RecentPathsManager(self)
+
         # Invertierungsmodus: 'smart' (nur Helligkeit) oder 'classic' (alles)
         # wird mit load_app_settings gesetzt
 
@@ -33870,6 +35053,31 @@ class PDFViewer(QMainWindow):
         close_action.triggered.connect(self.close_current_pdf)
         file_menu.addAction(close_action)
 
+        file_menu.addSeparator()
+
+        # --- Untermenü "Zuletzt verwendet" ---
+        recent_submenu = file_menu.addMenu(qta.icon('fa5s.history'), self.tr('menu_recent'))
+        self.recent_submenu = recent_submenu
+
+        # Untermenü-Einträge
+        self.recent_dirs_action = QAction(qta.icon('fa5s.folder'), self.tr('menu_recent_dirs'), self)
+        self.recent_dirs_action.triggered.connect(self.show_recent_dirs_submenu)
+        recent_submenu.addAction(self.recent_dirs_action)
+
+        self.recent_files_action = QAction(qta.icon('fa5s.file-pdf'), self.tr('menu_recent_files'), self)
+        self.recent_files_action.triggered.connect(self.show_recent_files_submenu)
+        recent_submenu.addAction(self.recent_files_action)
+
+        recent_submenu.addSeparator()
+
+        manage_recent_action = QAction(qta.icon('fa5s.list'), self.tr('recent_manage'), self)
+        manage_recent_action.triggered.connect(self.show_recent_paths_dialog)
+        recent_submenu.addAction(manage_recent_action)
+
+        # Hier werden die dynamischen Untermenüs erstellt
+        self.recent_dirs_submenu = None
+        self.recent_files_submenu = None
+#
         file_menu.addSeparator()
 
         # --- Speichern ---
@@ -34645,7 +35853,7 @@ class PDFViewer(QMainWindow):
         info_section.addSeparator()
 
         # User Data verzeichnis anzeigen
-        user_data_action = QAction(qta.icon('fa5s.folder'), "Open User Data Folder", self)
+        user_data_action = QAction(qta.icon('fa5s.folder'), self.tr('open_user_data_folder'), self)
         user_data_action.setShortcut("Ctrl+Alt+D")
         user_data_action.triggered.connect(self.open_user_data_folder)
         info_section.addAction(user_data_action)
@@ -36129,7 +37337,7 @@ class PDFViewer(QMainWindow):
             title=title,
             message=message,
             buttons=buttons,
-            icon_type="info",
+            icon_type="",
             text_alignment=Qt.AlignLeft,
             default_button=default_button
         )
@@ -36352,6 +37560,217 @@ class PDFViewer(QMainWindow):
             os.remove(version_file)
             print(f"🗑️ Version zurückgesetzt: {version_file}")
 
+   ###=======================================
+    ### Zuletzt verwendete Pfade
+    ###=======================================
+
+    def clear_recent_paths(self):
+        """Löscht alle gespeicherten Pfade nach Bestätigung"""
+        if self.recent_paths.is_empty():
+            self.say(self.tr('recent_empty'))
+            return
+
+        dialog = myUniversalDialog(
+            self,
+            title=self.tr('recent_clear_title'),
+            message=self.tr('recent_clear_confirm'),
+            buttons=[
+                (self.tr('btn_clear'), "danger", "clear"),
+                (self.tr('btn_cancel'), "secondary", "cancel")
+            ],
+            icon_type="",
+            voice_message=self.tr('recent_clear_confirm')
+        )
+        dialog.exec_()
+
+        if dialog.result_value == "clear":
+            self.recent_paths.clear()
+            self.update_recent_menu()
+            self.say(self.tr('recent_cleared'))
+
+    def get_recent_start_directory(self, default=None):
+        """Gibt das Startverzeichnis für Dateidialoge zurück"""
+        return self.recent_paths.get_start_directory(default)
+
+    # ===== METHODEN FÜR DIE UNTERMENÜS =====
+
+    def show_recent_dirs_submenu(self):
+        """Zeigt das Untermenü für Verzeichnisse"""
+        # Dynamisches Menü erstellen
+        menu = QMenu(self)
+        menu.setStyleSheet("""
+            QMenu {
+                background-color: #3D3D3D;
+                color: #E0E0E0;
+                border: 1px solid #555555;
+                min-width: 300px;
+            }
+            QMenu::item:selected {
+                background-color: #1565C0;
+            }
+        """)
+
+        if not self.recent_paths.is_enabled():
+            action = QAction(self.tr('recent_tracking_disabled'), self)
+            action.setEnabled(False)
+            menu.addAction(action)
+        else:
+            dirs = self.recent_paths.get_directories_with_display_names(max_items=10)
+            if dirs:
+                for path, display_name, index in dirs:
+                    action = QAction(
+                        qta.icon('fa5s.folder'),
+                        f"{index}. {display_name}",
+                        self
+                    )
+                    action.setToolTip(path)
+                    action.triggered.connect(
+                        lambda checked, p=path: self.open_recent_directory(p)
+                    )
+                    menu.addAction(action)
+
+                menu.addSeparator()
+
+                # Standard-Verzeichnis anzeigen
+                default_dir = self.recent_paths.get_default_directory()
+                if default_dir:
+                    default_action = QAction(
+                        qta.icon('fa5s.check-circle', color='#4CAF50'),
+                        self.tr('recent_default_current', os.path.basename(default_dir)),
+                        self
+                    )
+                    default_action.setEnabled(False)
+                    default_action.setToolTip(default_dir)
+                    menu.addAction(default_action)
+            else:
+                empty_action = QAction(self.tr('recent_no_directories'), self)
+                empty_action.setEnabled(False)
+                menu.addAction(empty_action)
+
+        # Menü an der Position des Actions anzeigen
+        menu.exec_(QCursor.pos())
+
+    def show_recent_files_submenu(self):
+        """Zeigt das Untermenü für Dateien"""
+        menu = QMenu(self)
+        menu.setStyleSheet("""
+            QMenu {
+                background-color: #3D3D3D;
+                color: #E0E0E0;
+                border: 1px solid #555555;
+                min-width: 300px;
+            }
+            QMenu::item:selected {
+                background-color: #1565C0;
+            }
+        """)
+
+        if not self.recent_paths.is_enabled():
+            action = QAction(self.tr('recent_tracking_disabled'), self)
+            action.setEnabled(False)
+            menu.addAction(action)
+        else:
+            files = self.recent_paths.get_files_with_display_names(max_items=10)
+            if files:
+                for path, display_name, index in files:
+                    action = QAction(
+                        qta.icon('fa5s.file-pdf'),
+                        f"{index}. {display_name}",
+                        self
+                    )
+                    action.setToolTip(path)
+                    action.triggered.connect(
+                        lambda checked, p=path: self.open_recent_file(p)
+                    )
+                    menu.addAction(action)
+            else:
+                empty_action = QAction(self.tr('recent_no_files'), self)
+                empty_action.setEnabled(False)
+                menu.addAction(empty_action)
+
+        # Menü an der Position des Actions anzeigen
+        menu.exec_(QCursor.pos())
+
+    def update_recent_menu(self):
+        """Aktualisiert die Recent-Menüs (für Kompatibilität)"""
+        # Die Untermenüs werden dynamisch erstellt, daher nichts zu tun
+        pass
+
+    def open_recent_directory(self, directory):
+        """
+        Öffnet den Dateidialog mit einem bestimmten Verzeichnis
+        """
+        if not os.path.exists(directory):
+            self.recent_paths.remove_directory(directory)
+            self.say(self.tr('recent_directory_not_found'))
+            return
+
+        # Dateidialog mit diesem Verzeichnis öffnen
+        if not self.check_for_unsaved_changes('open_new_pdf'):
+            return
+
+        path, _ = QFileDialog.getOpenFileName(
+            self,
+            self.tr('btn_open'),
+            directory,
+            "PDF Dateien (*.pdf)",
+            options=QFileDialog.Options() if sys.platform == 'darwin' else QFileDialog.DontUseNativeDialog
+        )
+
+        if path:
+            self.recent_paths.add_both(path)
+            self._load_pdf_safely(path)
+
+    def open_recent_file(self, filepath):
+        """
+        Öffnet eine PDF-Datei direkt aus der Recent-Liste
+        """
+        if not os.path.exists(filepath):
+            self.recent_paths.remove_file(filepath)
+            self.say(self.tr('recent_file_not_found'))
+            return
+
+        if not filepath.lower().endswith('.pdf'):
+            # Nicht-PDF-Datei: Nachfragen
+            reply = QMessageBox.question(
+                self,
+                self.tr('recent_open_file'),
+                self.tr('recent_open_file_question', os.path.basename(filepath)),
+                QMessageBox.Yes | QMessageBox.No
+            )
+            if reply != QMessageBox.Yes:
+                return
+
+        self.recent_paths.add_both(filepath)
+        self._load_pdf_safely(filepath)
+
+    def show_recent_paths_dialog(self):
+        """Zeigt den Dialog zur Verwaltung der Recent Paths"""
+        dialog = RecentPathsDialog(self, self.recent_paths)
+
+        # Dialog modal anzeigen
+        if dialog.exec_() == QDialog.Accepted:
+            selected_path = dialog.get_selected_path()
+            if selected_path:
+                if os.path.isdir(selected_path):
+                    # Verzeichnis: Dateidialog öffnen
+                    self.open_recent_directory(selected_path)
+                elif os.path.isfile(selected_path) and selected_path.lower().endswith('.pdf'):
+                    # PDF-Datei: direkt laden
+                    self.recent_paths.add_both(selected_path)
+                    self._load_pdf_safely(selected_path)
+                elif os.path.isfile(selected_path):
+                    # Andere Datei: Nachfragen
+                    reply = QMessageBox.question(
+                        self,
+                        self.tr('recent_open_file'),
+                        self.tr('recent_open_file_question', os.path.basename(selected_path)),
+                        QMessageBox.Yes | QMessageBox.No
+                    )
+                    if reply == QMessageBox.Yes:
+                        self.recent_paths.add_both(selected_path)
+                        self._load_pdf_safely(selected_path)
+
     ###=======================================
     ### Aktionen im Menü Datei - übersetzt
     ###=======================================
@@ -36361,16 +37780,16 @@ class PDFViewer(QMainWindow):
         if not self.check_for_unsaved_changes('open_new_pdf'):
             return
 
-        # Startverzeichnis bestimmen
-        start_dir = os.path.expanduser("~/Documents")  # Standardmäßig Dokumente-Ordner
+        # Startverzeichnis bestimmen (nur Verzeichnisse, keine Dateien)
+        start_dir = self.recent_paths.get_start_directory()
 
-        if hasattr(self, 'pdf_path') and self.pdf_path:
-            start_dir = os.path.dirname(self.pdf_path)
+        # Wenn kein Verzeichnis in Recent, Standard verwenden
+        if not start_dir or not os.path.exists(start_dir):
+            start_dir = os.path.expanduser("~/Documents")
 
         # Nativen Dialog anzeigen
         path, _ = QFileDialog.getOpenFileName(
             self,
-            # "PDF öffnen"
             self.tr('btn_open'),
             start_dir,
             "PDF Dateien (*.pdf)",
@@ -36378,6 +37797,9 @@ class PDFViewer(QMainWindow):
         )
 
         if path:
+            # Beides speichern: Verzeichnis für später, Datei für Recent-Dialog
+            self.recent_paths.add_both(path)
+            self.update_recent_menu()
             self._load_pdf_safely(path)
 
     def handle_new_pdf(self, pdf_path):
@@ -37190,14 +38612,89 @@ class PDFViewer(QMainWindow):
             import fitz
             doc = fitz.open(self.pdf_path)
 
-            info_text = f"PDF-Informationen\n\n"
-            info_text += f"Datei: {os.path.basename(self.pdf_path)}\n"
-            info_text += f"Seiten: {len(doc)}\n"
-            info_text += f"Dateigröße: {self._format_size(os.path.getsize(self.pdf_path))}\n\n"
-            info_text += "Seitengrößen:\n"
-            info_text += "-" * 40 + "\n"
+            # Basis-Info als sauberer Block (ohne doppelte \n)
+            info_lines = [
+                f"Datei: {os.path.basename(self.pdf_path)}",
+                f"Seiten: {len(doc)}",
+                f"Dateigröße: {self._format_size(os.path.getsize(self.pdf_path))}",
+                "",
+                "Seitengrößen:",
+                "-" * 40
+            ]
 
-            # Alle Seitengrößen erfassen (mit Format-Erkennung)
+            # Seitengrößen sammeln (wie gehabt)
+            page_sizes = {}
+            for i, page in enumerate(doc):
+                width = page.rect.width
+                height = page.rect.height
+                key = f"{width:.0f}x{height:.0f}"
+                if key not in page_sizes:
+                    format_name = self._get_page_format(width, height)
+                    page_sizes[key] = {
+                        'count': 0,
+                        'format': format_name,
+                        'width': width,
+                        'height': height
+                    }
+                page_sizes[key]['count'] += 1
+
+            # Größen-Infos anhängen (mit Einrückung)
+            for key, data in page_sizes.items():
+                info_lines.append(
+                    f"  {data['format']} ({data['width']:.0f} x {data['height']:.0f} pt)"
+                    f" - {data['count']} Seite(n)"
+                )
+
+            doc.close()
+
+            # Alles mit genau EINEM \n verbinden
+            info_text = "\n".join(info_lines)
+
+            myUniversalDialog(
+                self,
+                title=self.tr('pdf_info_title'),
+                message=info_text,
+                buttons=[(self.tr('btn_ok'), "primary", "ok")],
+                icon_type="",
+                text_alignment=Qt.AlignLeft,
+                selectable_text=True,
+                voice_message=self.tr('pdf_info_voice')
+            ).exec_()
+
+
+
+        except Exception as e:
+            print(f"Fehler beim Anzeigen der PDF-Info: {e}")
+            myUniversalDialog(
+                self,
+                title=self.tr('error'),
+                message=self.tr('pdf_info_error', str(e)),
+                buttons=[(self.tr('btn_ok'), "danger", "ok")],
+                icon_type="error",
+                voice_message=self.tr('error_occurred')
+            ).exec_()
+
+    def show_pdf_info_for_path(self, file_path):
+        """
+        Zeigt Informationen über eine beliebige PDF-Datei an.
+        """
+        if not file_path or not os.path.exists(file_path):
+            self._show_no_pdf_dialog()
+            return
+
+        try:
+            import fitz
+            doc = fitz.open(file_path)
+
+            info_lines = [
+                f"Datei: {os.path.basename(file_path)}",
+                f"Seiten: {len(doc)}",
+                f"Dateigröße: {self._format_size(os.path.getsize(file_path))}",
+                "",
+                "Seitengrößen:",
+                "-" * 40
+            ]
+
             page_sizes = {}
             for i, page in enumerate(doc):
                 width = page.rect.width
@@ -37214,10 +38711,14 @@ class PDFViewer(QMainWindow):
                 page_sizes[key]['count'] += 1
 
             for key, data in page_sizes.items():
-                info_text += f"  {data['format']} ({data['width']:.0f} x {data['height']:.0f} pt) - {data['count']} Seite(n)\n"
+                info_lines.append(
+                    f"  {data['format']} ({data['width']:.0f} x {data['height']:.0f} pt)"
+                    f" - {data['count']} Seite(n)"
+                )
 
             doc.close()
 
+            info_text = "\n".join(info_lines)
             myUniversalDialog(
                 self,
                 title=self.tr('pdf_info_title'),
@@ -37225,6 +38726,7 @@ class PDFViewer(QMainWindow):
                 buttons=[(self.tr('btn_ok'), "primary", "ok")],
                 icon_type="",
                 text_alignment=Qt.AlignLeft,
+                selectable_text=True,  # <- HIER fehlte das!
                 voice_message=self.tr('pdf_info_voice')
             ).exec_()
 
@@ -40413,7 +41915,7 @@ class PDFViewer(QMainWindow):
                 (self.tr('ocr_continue_anyway'), "warning", "continue", 200),
                 (self.tr('btn_cancel'), "danger", "cancel", 120)
             ],
-            icon_type="warning",
+            icon_type="",
             voice_message=self.tr('ocr_missing_languages_voice'),
             text_alignment=Qt.AlignLeft,
             default_button="help"
@@ -42694,117 +44196,96 @@ class PDFViewer(QMainWindow):
         """
         Stellt alle Overlay-Elemente aus self._saved_overlays wieder her.
 
-        FUNKTIONSWEISE:
-        1. Prüft ob Daten vorhanden sind
-        2. Leert alle Listen (all_text_items etc.)
-        3. Erstellt für jeden gespeicherten Eintrag ein neues Qt-Objekt
-        4. Fügt die neuen Objekte in die Listen ein
-        5. Aktiviert die entsprechenden Modi
-        6. Springt zur gespeicherten Seite
-
-        WICHTIG:
-        - Die alten Qt-Objekte wurden bereits aus der Szene entfernt (in _clear_items_from_scene_only)
-        - Hier werden NEUE Qt-Objekte aus den gespeicherten Daten erstellt
-        - self._saved_overlays wird NICHT gelöscht (bleibt für nächsten Umschaltvorgang erhalten)
-        - Die Daten werden erst beim Speichern gelöscht (dann sind sie in der PDF)
-
-        RÜCKGABE:
-        - True bei Erfolg, False wenn keine Daten vorhanden
+        WICHTIG: Extrahiert die Scroll-Position aus den Daten,
+        damit sie später wiederhergestellt werden kann.
         """
 
         print("\n=== RESTORE OVERLAY ITEMS ===")
 
-        # ===== 1. Prüfen ob Daten vorhanden sind =====
         if not self._saved_overlays:
             print("DEBUG: Keine Overlay-Daten zum Wiederherstellen")
             return False
 
         print(f"DEBUG: Stelle {len(self._saved_overlays)} Elemente wieder her")
 
-        # ===== 2. Sicherheitsprüfung: Ist die Szene bereit? =====
-        if not self.page_items or len(self.page_items) == 0:
-            print("DEBUG: page_items noch nicht bereit - versuche es später")
-            QTimer.singleShot(200, self._restore_overlay_items)
-            return False
+        # ===== Scroll-Position aus den Daten extrahieren =====
+        scroll_position = None
+        for d in self._saved_overlays:
+            if d.get('type') == 'scroll':
+                scroll_position = {
+                    'page': d.get('page', 0),
+                    'relative_x': d.get('relative_x', 0.5),
+                    'relative_y': d.get('relative_y', 0.5)
+                }
+                print(f"DEBUG: Scroll-Position gefunden: Seite {scroll_position['page'] + 1}")
+                break
 
-        print(f"DEBUG: page_items verfügbar: {len(self.page_items)} Seiten")
-
-        # ===== 3. Alle Listen leeren =====
-        # Die alten Items wurden bereits aus der Szene entfernt, aber die Listen sind noch voll
-        # Wir müssen sie leeren, bevor wir neue Items erstellen
+        # ===== Alle Listen leeren =====
         self.all_text_items.clear()
         self.all_signature_items.clear()
         self.all_image_items.clear()
         self.all_form_items.clear()
         self.all_redaction_items.clear()
 
-        # ===== 4. Metadaten extrahieren =====
+        # ===== Metadaten extrahieren =====
         target_page = 0
         for d in self._saved_overlays:
             if d.get('type') == 'meta':
                 target_page = d.get('current_page', 0)
                 break
 
-        # ===== 5. Alle Elemente wiederherstellen =====
         restored_count = 0
 
+        # ===== Alle Elemente wiederherstellen (ohne scroll und meta) =====
         for d in self._saved_overlays:
             t = d.get('type')
+            if t in ['scroll', 'meta']:
+                continue  # Überspringe Meta-Daten
+
             try:
                 if t == 'cross':
                     item = self._restore_cross_item(d)
                     if item:
                         self.all_text_items.append(item)
                         restored_count += 1
-                        print(f"DEBUG: ✅ Kreuz wiederhergestellt auf Seite {item.page}")
-
                 elif t == 'text':
                     item = self._restore_text_item(d)
                     if item:
                         self.all_text_items.append(item)
                         restored_count += 1
-
                 elif t == 'signature':
                     item = self._restore_signature_item(d)
                     if item:
                         self.all_signature_items.append(item)
                         restored_count += 1
-
                 elif t == 'image':
                     item = self._restore_image_item(d)
                     if item:
                         self.all_image_items.append(item)
                         restored_count += 1
-
                 elif t == 'form':
                     item = self._restore_form_item(d)
                     if item:
                         self.all_form_items.append(item)
                         restored_count += 1
-
                 elif t == 'redaction':
                     item = self._restore_redaction_item(d)
                     if item:
                         self.all_redaction_items.append(item)
                         restored_count += 1
-
             except Exception as e:
                 print(f"DEBUG: Fehler bei {t}: {e}")
-                import traceback
-                traceback.print_exc()
 
         print(f"DEBUG: Wiederhergestellt: {restored_count} Elemente")
-        print(f"DEBUG: Texte: {len(self.all_text_items)}, Signaturen: {len(self.all_signature_items)}, "
-            f"Bilder: {len(self.all_image_items)}, Formen: {len(self.all_form_items)}")
 
-        # ===== 6. Modi aktivieren =====
+        # ===== Modi aktivieren =====
         self.text_mode = len(self.all_text_items) > 0
         self.signature_mode = len(self.all_signature_items) > 0
         self.image_mode = len(self.all_image_items) > 0
         self.form_mode = len(self.all_form_items) > 0
         self.redaction_mode = len(self.all_redaction_items) > 0
 
-        # ===== 7. Aktuelle Items setzen und Shortcuts aktivieren =====
+        # ===== Aktuelle Items setzen =====
         if self.text_mode:
             self.current_text_item = self.all_text_items[-1]
             self.current_text_item.setSelected(True)
@@ -42830,26 +44311,27 @@ class PDFViewer(QMainWindow):
             self.current_redaction_item.setSelected(True)
             self._setup_redaction_shortcuts()
 
-        # ===== 8. Zur gespeicherten Seite springen =====
-        if target_page < self.total_pages:
+        # ===== Zur Seite springen (nur wenn keine Scroll-Position) =====
+        if scroll_position is None and target_page < self.total_pages:
             self.current_page = target_page
             with QSignalBlocker(self.page_spin):
                 self.page_spin.setValue(target_page + 1)
             self.scroll_to_page(announce=False)
 
-        # ===== 9. UI aktualisieren =====
+        # ===== UI aktualisieren =====
         self.update_menu_states()
         self.scene.update()
         self.graphics_view.viewport().update()
         QApplication.processEvents()
 
-        # ===== 10. WICHTIG: _saved_overlays NICHT LÖSCHEN! =====
-        # Die Daten bleiben erhalten für den nächsten Umschaltvorgang
-        # Erst beim Speichern (in toggle_dark_mode) werden sie gelöscht
-        # self._saved_overlays = None  # <- DAS WEGLASSEN!
+        # ===== Scroll-Position für später speichern =====
+        if scroll_position:
+            self._pending_scroll_position = scroll_position
+
+        # ===== WICHTIG: _saved_overlays NICHT LÖSCHEN! =====
+        # self._saved_overlays = None
 
         print("=== RESTORE OVERLAY ITEMS ABGESCHLOSSEN ===\n")
-        print(f"DEBUG: _saved_overlays bleibt erhalten mit {len(self._saved_overlays)} Elementen")
         return True
 
     def _restore_cross_item(self, data):
@@ -45087,6 +46569,7 @@ class PDFViewer(QMainWindow):
                 self._cleanup_all_modes()
 
             self.setWindowTitle(f"{self.tr('app_title')} - {os.path.basename(final_path)}")
+            self._cleanup_all_modes()
 
         except Exception as e:
             print(f"\n❌ FEHLER beim Speichern: {str(e)}")
@@ -46103,44 +47586,6 @@ class PDFViewer(QMainWindow):
                 rect = fitz.Rect(x_pt, y_pt, x_pt + width_pt, y_pt + height_pt)
                 page.insert_image(rect, filename=data['original_path'])
 
-                # ========== ZEITSTEMPEL SPEICHERN (KORREKT SKALIERT) ==========
-                # if data['timestamp_item']:
-                #     timestamp_text = data['timestamp_item'].toPlainText()
-
-                #     # 1. Ermittle die Schriftgröße in Pixeln, wie sie in der GUI dargestellt wird
-                #     font = data['timestamp_item'].font()
-                #     font_size_px = font.pixelSize()
-                #     if font_size_px == -1:
-                #         # Fallback: Punktgröße in Pixel umrechnen (Annahme 96 DPI)
-                #         font_size_pt = font.pointSize()
-                #         font_size_px = font_size_pt * 96 / 72
-
-                #     # 2. Berechne die relative Größe zur GUI-Seitenhöhe
-                #     gui_height = page_rect.height()
-                #     if gui_height > 0:
-                #         relative_size = font_size_px / gui_height
-                #     else:
-                #         relative_size = 0.02  # Fallback: 2% der Seitenhöhe
-
-                #     # 3. Berechne die absolute Punktgröße für das PDF
-                #     pdf_height = page.rect.height
-                #     font_size_pt = relative_size * pdf_height
-
-                #     # 4. Abstand unter der Signatur (10 Pixel in GUI -> relativ umrechnen)
-                #     margin_pt = (10 / gui_height) * pdf_height if gui_height > 0 else 10
-                #     timestamp_y = y_pt + height_pt + margin_pt
-
-                #     # 5. Zeitstempel ins PDF einfügen
-                #     page.insert_text(
-                #         fitz.Point(x_pt, timestamp_y),
-                #         timestamp_text,
-                #         fontsize=font_size_pt,
-                #         color=(0, 0, 0)
-                #     )
-
-                #     # Debug-Ausgabe (optional, später entfernen)
-                #     print(f"DEBUG Zeitstempel: GUI-Höhe={gui_height:.1f}, PDF-Höhe={pdf_height:.1f}, "
-                #         f"Schrift-Px={font_size_px:.1f}, Rel={relative_size:.4f}, Schrift-Pt={font_size_pt:.1f}")
 
 
                 if data['timestamp_item']:
@@ -49726,294 +51171,416 @@ class PDFViewer(QMainWindow):
     ###-----------------------------
     ### DARK MODE CMD+D
     ###-----------------------------
-    # mit Abfrage erst Speichern?
+
+    # scchaltet sofort um
     # def toggle_dark_mode(self):
     #     """
-    #     Schaltet zwischen Dark und Light Mode um.
+    #     Schaltet zwischen Dark und Light Mode um - OHNE SPEICHER-ABFRAGE.
+
+    #     Diese Version wird für Tastaturkurzbefehle (Ctrl+D) und Button-Klicks verwendet,
+    #     bei denen der Benutzer direkt umschalten möchte, ohne vorher gefragt zu werden.
 
     #     FUNKTIONSWEISE:
-    #     1. Überprüft, ob bereits Overlay-Daten gespeichert sind (self._saved_overlays)
-    #     2. Wenn nicht: Sichert alle Overlay-Elemente (Texte, Kreuze, Signaturen, Bilder, Formen)
-    #     3. Fragt bei ungespeicherten Änderungen: Speichern, Verwerfen oder Abbrechen
-    #     4. Entfernt alle Items aus der Szene (nicht aus den Listen!)
-    #     5. Schaltet den Dark Mode um
-    #     6. Lädt die PDF neu
-    #     7. Stellt die Overlays aus den gesicherten Daten wieder her
+    #     1. Sichert ALLE Overlay-Elemente (Texte, Kreuze, Signaturen, Bilder, Formen, Redactions)
+    #     in self._saved_overlays als unabhängige Python-Datenstruktur
+    #     2. Entfernt alle Qt-Objekte aus der grafischen Szene (NICHT aus den Listen!)
+    #     3. Schaltet den Dark Mode um (True <-> False)
+    #     4. Lädt die PDF neu
+    #     5. Stellt alle Overlay-Elemente aus den gesicherten Daten wieder her
 
-    #     WICHTIG:
-    #     - self._saved_overlays wird NUR beim Speichern gelöscht (dann sind die Daten in der PDF)
-    #     - Bei Verwerfen oder Abbruch bleiben die Daten erhalten
-    #     - Die Items werden NUR aus der Szene entfernt, nicht aus den Listen
-    #     - Dadurch bleiben die Daten für den nächsten Umschaltvorgang erhalten
+    #     WICHTIGE PUNKTE FÜR DIE FUNKTIONALITÄT:
+
+    #     a) Datenerhalt:
+    #     - self._saved_overlays wird NACH der Wiederherstellung NICHT gelöscht
+    #     - Die Daten bleiben erhalten für den NÄCHSTEN Umschaltvorgang
+    #     - Erst beim Speichern (über andere Methoden) werden sie gelöscht
+
+    #     b) Listen vs. Szene:
+    #     - Die Qt-Objekte werden NUR aus der Szene entfernt
+    #     - Die Listen (all_text_items, all_signature_items, etc.) bleiben ERHALTEN
+    #     - Dadurch bleiben die Daten für das nächste _save_overlay_data() verfügbar
+
+    #     c) Windows Bundle Kompatibilität:
+    #     - Verzögerung (200ms) beim Wiederherstellen gibt der Szene Zeit, sich zu laden
+    #     - Absolute Pfade werden in _save_overlay_data() verwendet
+    #     - Garbage Collection wird erzwungen
+
+    #     d) Modi bleiben erhalten:
+    #     - self.text_mode, self.signature_mode, etc. werden NICHT zurückgesetzt
+    #     - Die aktuellen Items (current_text_item, etc.) bleiben erhalten
+    #     - Die Shortcuts werden nach der Wiederherstellung neu eingerichtet
+
+    #     RÜCKGABE:
+    #     - None (die Methode führt die Umschaltung durch)
+
+    #     BEISPIEL AUFRUF:
+    #         # Über Tastaturkurzbefehl Ctrl+D
+    #         # Über Button-Klick in der Navigationsleiste
+    #         # Über Menüpunkt "Ansicht -> Dark Mode umschalten"
     #     """
 
-    #     print("\n=== TOGGLE DARK MODE ===")
+    #     print("\n=== TOGGLE DARK MODE (OHNE SPEICHER-ABFRAGE) ===")
     #     print(f"Dark Mode aktuell: {self.dark_mode}")
     #     print(f"Text-Modus: {self.text_mode}")
     #     print(f"Anzahl Texte: {len(self.all_text_items)}")
-    #     print(f"_saved_overlays vorhanden: {self._saved_overlays is not None}")
-    #     if self._saved_overlays:
-    #         print(f"_saved_overlays hat {len(self._saved_overlays)} Elemente")
+    #     print(f"Anzahl Signaturen: {len(self.all_signature_items)}")
+    #     print(f"Anzahl Bilder: {len(self.all_image_items)}")
+    #     print(f"Anzahl Formen: {len(self.all_form_items)}")
+    #     print(f"Anzahl Redactions: {len(self.all_redaction_items)}")
 
-    #     # ===== 1. Overlay-Daten sichern =====
-    #     # Wichtig: Immer aktualisieren, da sich die Items in der Szene geändert haben könnten
+    #     # ============================================================
+    #     # SCHRITT 1: ALLE OVERLAY-DATEN SICHERN
+    #     # ============================================================
+    #     #
+    #     # WARUM?
+    #     # - Die Qt-Objekte werden gleich aus der Szene entfernt
+    #     # - Wir brauchen die Daten für die Wiederherstellung nach dem Neuladen
+    #     # - Die Daten werden als Python-Dictionaries gespeichert (unabhängig von Qt)
+    #     #
+    #     # WAS WIRD GESICHERT?
+    #     # - Texte und Kreuze (Position, Inhalt, Formatierung, Farbe)
+    #     # - Signaturen (Position, Pfad, Größe, Zeitstempel)
+    #     # - Bilder (Position, Pfad, Größe, Seitenverhältnis)
+    #     # - Formen (Position, Typ, Linien, Farben, Transparenz)
+    #     # - Redactions (Position, Größe)
+    #     # - Meta-Daten (aktuelle Seite)
+    #     #
+    #     # WICHTIG:
+    #     # - Die Daten werden in self._saved_overlays gespeichert
+    #     # - Diese Variable bleibt erhalten, bis sie explizit gelöscht wird
+    #     # - Sie wird NUR beim Speichern gelöscht (nicht beim Umschalten!)
+    #     # ============================================================
+
+    #     print("\n--- SCHRITT 1: Overlay-Daten sichern ---")
     #     self._save_overlay_data()
-    #     print(f"DEBUG: Gesichert: {len(self._saved_overlays) if self._saved_overlays else 0} Elemente")
 
-    #     # ===== 2. Dialog für ungespeicherte Änderungen =====
-    #     has_unsaved = (self.text_mode or self.signature_mode or self.image_mode or
-    #                 self.form_mode or self.redaction_mode)
+    #     if self._saved_overlays:
+    #         print(f"✅ {len(self._saved_overlays)} Overlay-Elemente gesichert")
+    #         print(f"   - Meta: 1 Element (aktuelle Seite)")
+    #         print(f"   - Texte/Kreuze: {sum(1 for d in self._saved_overlays if d.get('type') in ['text', 'cross'])}")
+    #         print(f"   - Signaturen: {sum(1 for d in self._saved_overlays if d.get('type') == 'signature')}")
+    #         print(f"   - Bilder: {sum(1 for d in self._saved_overlays if d.get('type') == 'image')}")
+    #         print(f"   - Formen: {sum(1 for d in self._saved_overlays if d.get('type') == 'form')}")
+    #         print(f"   - Redactions: {sum(1 for d in self._saved_overlays if d.get('type') == 'redaction')}")
+    #     else:
+    #         print("⚠️ Keine Overlay-Daten gesichert (keine Elemente vorhanden)")
 
-    #     if has_unsaved:
-    #         dialog = myUniversalDialog(
-    #             self,
-    #             title=self.tr('unsaved_changes_title'),
-    #             message=self.tr('unsaved_changes_message_darkmode'),
-    #             buttons=[
-    #                 (self.tr('save_and_switch'), "success", "save", 300),
-    #                 (self.tr('discard_and_switch'), "primary", "discard", 300),
-    #                 (self.tr('btn_cancel'), "primary", "cancel", 180)
-    #             ],
-    #             icon_type="",
-    #             text_alignment=Qt.AlignLeft,
-    #             default_button="discard"
-    #         )
-    #         dialog.exec_()
+    #     # ============================================================
+    #     # SCHRITT 2: ALLE ITEMS AUS DER SZENE ENTFERNEN
+    #     # ============================================================
+    #     #
+    #     # WARUM?
+    #     # - Die Qt-Objekte sind an die alte PDF-Seite gebunden
+    #     # - Beim Neuladen würden sie zu "wrapped C/C++ object has been deleted" Fehlern führen
+    #     # - Sie müssen aus der Szene entfernt werden, bevor die PDF neu geladen wird
+    #     #
+    #     # WAS PASSIERT MIT DEN LISTEN?
+    #     # - Die Listen (all_text_items, etc.) bleiben ERHALTEN!
+    #     # - NUR die grafische Darstellung wird entfernt
+    #     # - Die Daten in den Listen werden für das nächste _save_overlay_data() benötigt
+    #     #
+    #     # WICHTIG:
+    #     # - Die Modi (text_mode, etc.) werden NICHT zurückgesetzt!
+    #     # - Die aktuellen Items (current_text_item, etc.) bleiben erhalten!
+    #     # - Nur die Szene wird bereinigt, nicht die Datenstruktur!
+    #     # ============================================================
 
-    #         if dialog.result_value == "cancel":
-    #             print("DEBUG: Abgebrochen - Overlays bleiben erhalten")
-    #             return
-
-    #         elif dialog.result_value == "save":
-    #             print("DEBUG: Speichern...")
-    #             # Je nach aktivem Modus speichern
-    #             if self.text_mode:
-    #                 self._save_all_texts_and_crosses(reload_after_save=False)
-    #             elif self.signature_mode:
-    #                 self._save_all_signatures(reload_after_save=False)
-    #             elif self.image_mode:
-    #                 self._save_all_images(reload_after_save=False)
-    #             elif self.form_mode:
-    #                 self._save_all_forms(reload_after_save=False)
-    #             elif self.redaction_mode:
-    #                 self._apply_all_redactions_and_save()
-
-    #             # Nach Speichern: Overlay-Daten löschen (sind jetzt in der PDF)
-    #             # Beim nächsten Umschalten werden sie neu gesichert
-    #             self._saved_overlays = None
-    #             print("DEBUG: Overlay-Daten nach Speichern gelöscht")
-
-    #         elif dialog.result_value == "discard":
-    #             print("DEBUG: Verwerfen - Overlay-Daten bleiben erhalten")
-    #             # self._saved_overlays bleibt erhalten für die Wiederherstellung
-
-    #     # ===== 3. ALLE Items aus der Szene entfernen =====
-    #     # Wichtig: Die Listen (all_text_items etc.) bleiben erhalten!
-    #     # Die Items werden NUR aus der grafischen Szene entfernt
-    #     print("DEBUG: Entferne alle Items aus der Szene (Listen bleiben erhalten)...")
+    #     print("\n--- SCHRITT 2: Items aus der Szene entfernen ---")
+    #     print("   (Listen bleiben erhalten für nächste Sicherung)")
     #     self._clear_items_from_scene_only()
 
-    #     # ===== 4. Dark Mode umschalten =====
-    #     self.dark_mode = not self.dark_mode
-    #     print(f"DEBUG: Dark Mode neu: {self.dark_mode}")
+    #     # ============================================================
+    #     # SCHRITT 3: DARK MODE UMSCHALTEN
+    #     # ============================================================
+    #     #
+    #     # WARUM?
+    #     # - Der Dark Mode beeinflusst die Darstellung der PDF
+    #     # - Die Farben der Overlays werden beim Wiederherstellen angepasst
+    #     # - Der Button-Text und Menüpunkt werden aktualisiert
+    #     #
+    #     # WAS PASSIERT?
+    #     # - self.dark_mode wird von True auf False oder von False auf True gesetzt
+    #     # - Die Sichtbarkeit der Dark-Mode-spezifischen Menüs wird angepasst
+    #     # - Das Threshold-Menü (Graustufen) wird bei Smart-Modus eingeblendet
+    #     # ============================================================
 
-    #     # ===== 5. PDF neu laden =====
-    #     # Die PDF wird neu geladen, aber die Overlay-Daten bleiben in self._saved_overlays
+    #     print("\n--- SCHRITT 3: Dark Mode umschalten ---")
+    #     self.dark_mode = not self.dark_mode
+    #     print(f"✅ Dark Mode neu: {'AKTIV' if self.dark_mode else 'INAKTIV'}")
+
+    #     # Sichtbarkeit der Dark-Mode-spezifischen Menüs anpassen
+    #     if hasattr(self, 'invert_mode_menu'):
+    #         self.invert_mode_menu.menuAction().setVisible(self.dark_mode)
+    #         print(f"   - Invertierungs-Menü: {'sichtbar' if self.dark_mode else 'versteckt'}")
+
+    #     if self.dark_mode:
+    #         if hasattr(self, 'threshold_menu'):
+    #             # Nur bei Smart-Modus sichtbar
+    #             is_smart = (self.invert_mode == 'smart')
+    #             self.threshold_menu.menuAction().setVisible(is_smart)
+    #             print(f"   - Threshold-Menü: {'sichtbar' if is_smart else 'versteckt'}")
+    #     else:
+    #         if hasattr(self, 'threshold_menu'):
+    #             self.threshold_menu.menuAction().setVisible(False)
+    #             print(f"   - Threshold-Menü: versteckt (Light Mode)")
+
+    #     # ============================================================
+    #     # SCHRITT 4: PDF NEU LADEN
+    #     # ============================================================
+    #     #
+    #     # WARUM?
+    #     # - Die PDF muss mit dem neuen Dark Mode-Status neu gerendert werden
+    #     # - Die Overlay-Daten bleiben in self._saved_overlays erhalten
+    #     # - Der Zoom-Modus bleibt erhalten
+    #     #
+    #     # WAS PASSIERT?
+    #     # - Die PDF wird mit dem neuen Dark Mode-Status geladen
+    #     # - Die Seiten werden neu gerendert
+    #     # - Die Szene wird mit den neuen Seiten gefüllt
+    #     # - Der Zoom-Modus wird auf den vorherigen Wert gesetzt
+    #     # ============================================================
+
+    #     print("\n--- SCHRITT 4: PDF neu laden ---")
     #     current_mode = self.zoom_mode
+    #     print(f"   - Zoom-Modus: {current_mode}")
+
     #     if hasattr(self, 'pdf_path') and self.pdf_path:
-    #         print(f"DEBUG: Lade PDF neu: {self.pdf_path}")
+    #         print(f"   - PDF-Pfad: {self.pdf_path}")
     #         self.load_pdf()
     #         self.set_zoom_mode(current_mode)
-
-    #     # ===== 6. Overlays wiederherstellen =====
-    #     # Wenn Overlay-Daten vorhanden sind (mehr als nur meta), wiederherstellen
-    #     if self._saved_overlays is not None and len(self._saved_overlays) > 1:
-    #         print("DEBUG: Stelle Overlays aus gesicherten Daten wieder her...")
-    #         # Verzögerung, damit die Szene vollständig geladen ist (wichtig für Windows Bundle)
-    #         QTimer.singleShot(200, self._restore_overlay_items)
+    #         print("✅ PDF erfolgreich neu geladen")
     #     else:
-    #         print("DEBUG: Keine Overlays wiederherzustellen")
+    #         print("⚠️ Keine PDF geladen - Überspringe Neuladen")
+
+    #     # ============================================================
+    #     # SCHRITT 5: OVERLAYS WIEDERHERSTELLEN
+    #     # ============================================================
+    #     #
+    #     # WARUM?
+    #     # - Die Overlay-Elemente müssen nach dem Neuladen wieder angezeigt werden
+    #     # - Die Daten sind in self._saved_overlays gespeichert
+    #     # - Die Elemente werden mit den NEUEN Dark Mode-Farben erstellt
+    #     #
+    #     # WAS PASSIERT?
+    #     # - Aus den gespeicherten Daten werden neue Qt-Objekte erstellt
+    #     # - Die Objekte werden in die Szene eingefügt
+    #     # - Die Listen werden mit den neuen Objekten gefüllt
+    #     # - Die Modi werden aktiviert
+    #     # - Die Shortcuts werden eingerichtet
+    #     #
+    #     # WICHTIG:
+    #     # - Verzögerung (200ms) für Windows Bundle-Kompatibilität
+    #     # - self._saved_overlays wird NICHT gelöscht!
+    #     # - Die Daten bleiben für den NÄCHSTEN Umschaltvorgang erhalten
+    #     # ============================================================
+
+    #     print("\n--- SCHRITT 5: Overlays wiederherstellen ---")
+
+    #     if self._saved_overlays is not None and len(self._saved_overlays) > 1:
+    #         print(f"   - {len(self._saved_overlays)} Overlay-Elemente werden wiederhergestellt")
+    #         print("   - Verzögerung: 200ms (für Windows Bundle-Kompatibilität)")
+
+    #         # Wichtig: Verzögerung, damit die Szene vollständig geladen ist
+    #         # Besonders wichtig für Windows Bundle, wo die Szene langsamer lädt
+    #         QTimer.singleShot(200, self._restore_overlay_items)
+    #         print("✅ Overlay-Wiederherstellung gestartet")
+    #     else:
+    #         if self._saved_overlays is None:
+    #             print("⚠️ Keine Overlay-Daten vorhanden")
+    #         else:
+    #             print("⚠️ Nur Meta-Daten vorhanden (keine Elemente zum Wiederherstellen)")
     #         self._saved_overlays = None
 
-    #     # UI aktualisieren
+    #     # ============================================================
+    #     # SCHRITT 6: UI AKTUALISIEREN
+    #     # ============================================================
+    #     #
+    #     # WARUM?
+    #     # - Der Button-Text muss aktualisiert werden (Dark/Light)
+    #     # - Der Menüpunkt muss aktualisiert werden
+    #     # - Die Einstellungen müssen gespeichert werden
+    #     # ============================================================
+
+    #     print("\n--- SCHRITT 6: UI aktualisieren ---")
     #     self.update_mode_action_text()
     #     self.save_app_settings()
-    #     print("=== TOGGLE DARK MODE ABGESCHLOSSEN ===\n")
+    #     print("✅ UI aktualisiert")
+    #     print("✅ Einstellungen gespeichert")
 
-    # scchaltet sofort um
+    #     # ============================================================
+    #     # ABSCHLUSS
+    #     # ============================================================
+
+    #     print("\n=== TOGGLE DARK MODE ABGESCHLOSSEN ===")
+    #     print(f"📊 Status nach Umschaltung:")
+    #     print(f"   - Dark Mode: {'AKTIV' if self.dark_mode else 'INAKTIV'}")
+    #     print(f"   - Text-Modus: {self.text_mode}")
+    #     print(f"   - Signaturen: {len(self.all_signature_items)}")
+    #     print(f"   - Bilder: {len(self.all_image_items)}")
+    #     print(f"   - Formen: {len(self.all_form_items)}")
+    #     print(f"   - Redactions: {len(self.all_redaction_items)}")
+    #     print(f"   - Overlay-Daten erhalten: {self._saved_overlays is not None}")
+    #     if self._saved_overlays:
+    #         print(f"   - Overlay-Elemente: {len(self._saved_overlays)}")
+    #     print("=" * 50 + "\n")
+
     def toggle_dark_mode(self):
         """
-        Schaltet zwischen Dark und Light Mode um - OHNE SPEICHER-ABFRAGE.
+        Schaltet zwischen Dark und Light Mode um - MIT POSITIONSERHALT
 
-        Diese Version wird für Tastaturkurzbefehle (Ctrl+D) und Button-Klicks verwendet,
-        bei denen der Benutzer direkt umschalten möchte, ohne vorher gefragt zu werden.
+        Diese Version speichert nicht nur alle Overlay-Elemente, sondern auch
+        die aktuelle Seite und die genaue Scroll-Position (Viewport-Mitte).
 
         FUNKTIONSWEISE:
-        1. Sichert ALLE Overlay-Elemente (Texte, Kreuze, Signaturen, Bilder, Formen, Redactions)
-        in self._saved_overlays als unabhängige Python-Datenstruktur
-        2. Entfernt alle Qt-Objekte aus der grafischen Szene (NICHT aus den Listen!)
-        3. Schaltet den Dark Mode um (True <-> False)
-        4. Lädt die PDF neu
-        5. Stellt alle Overlay-Elemente aus den gesicherten Daten wieder her
+        1. Speichert die aktuelle Scroll-Position (Viewport-Mitte in Scene-Koordinaten)
+        2. Sichert ALLE Overlay-Elemente in self._saved_overlays
+        3. Entfernt alle Qt-Objekte aus der grafischen Szene
+        4. Schaltet den Dark Mode um
+        5. Lädt die PDF neu
+        6. Stellt alle Overlay-Elemente aus den gesicherten Daten wieder her
+        7. Springt zur gespeicherten Position (Seite + Scroll-Position)
 
-        WICHTIGE PUNKTE FÜR DIE FUNKTIONALITÄT:
-
-        a) Datenerhalt:
-        - self._saved_overlays wird NACH der Wiederherstellung NICHT gelöscht
-        - Die Daten bleiben erhalten für den NÄCHSTEN Umschaltvorgang
-        - Erst beim Speichern (über andere Methoden) werden sie gelöscht
-
-        b) Listen vs. Szene:
-        - Die Qt-Objekte werden NUR aus der Szene entfernt
-        - Die Listen (all_text_items, all_signature_items, etc.) bleiben ERHALTEN
-        - Dadurch bleiben die Daten für das nächste _save_overlay_data() verfügbar
-
-        c) Windows Bundle Kompatibilität:
-        - Verzögerung (200ms) beim Wiederherstellen gibt der Szene Zeit, sich zu laden
-        - Absolute Pfade werden in _save_overlay_data() verwendet
-        - Garbage Collection wird erzwungen
-
-        d) Modi bleiben erhalten:
-        - self.text_mode, self.signature_mode, etc. werden NICHT zurückgesetzt
-        - Die aktuellen Items (current_text_item, etc.) bleiben erhalten
-        - Die Shortcuts werden nach der Wiederherstellung neu eingerichtet
-
-        RÜCKGABE:
-        - None (die Methode führt die Umschaltung durch)
-
-        BEISPIEL AUFRUF:
-            # Über Tastaturkurzbefehl Ctrl+D
-            # Über Button-Klick in der Navigationsleiste
-            # Über Menüpunkt "Ansicht -> Dark Mode umschalten"
+        WICHTIG FÜR DIE POSITIONSERHALT:
+        - Die Viewport-Mitte wird in Scene-Koordinaten gespeichert
+        - Nach dem Neuladen wird dorthin gescrollt
+        - Funktioniert mit allen Zoom-Modi (page, two_pages, overview)
+        - Die Position wird relativ zur Seite gespeichert (nicht absolut)
         """
 
-        print("\n=== TOGGLE DARK MODE (OHNE SPEICHER-ABFRAGE) ===")
+        print("\n=== TOGGLE DARK MODE (MIT POSITIONSERHALT) ===")
         print(f"Dark Mode aktuell: {self.dark_mode}")
-        print(f"Text-Modus: {self.text_mode}")
-        print(f"Anzahl Texte: {len(self.all_text_items)}")
-        print(f"Anzahl Signaturen: {len(self.all_signature_items)}")
-        print(f"Anzahl Bilder: {len(self.all_image_items)}")
-        print(f"Anzahl Formen: {len(self.all_form_items)}")
-        print(f"Anzahl Redactions: {len(self.all_redaction_items)}")
+        print(f"Aktuelle Seite: {self.current_page + 1}")
 
         # ============================================================
-        # SCHRITT 1: ALLE OVERLAY-DATEN SICHERN
+        # SCHRITT 1: AKTUELLE POSITION SPEICHERN
         # ============================================================
         #
-        # WARUM?
-        # - Die Qt-Objekte werden gleich aus der Szene entfernt
-        # - Wir brauchen die Daten für die Wiederherstellung nach dem Neuladen
-        # - Die Daten werden als Python-Dictionaries gespeichert (unabhängig von Qt)
+        # WAS WIRD GESPEICHERT?
+        # - Die aktuelle Seite (current_page)
+        # - Die Viewport-Mitte in Scene-Koordinaten
+        # - Die relative Position auf der Seite (0..1 für X und Y)
         #
-        # WAS WIRD GESICHERT?
-        # - Texte und Kreuze (Position, Inhalt, Formatierung, Farbe)
-        # - Signaturen (Position, Pfad, Größe, Zeitstempel)
-        # - Bilder (Position, Pfad, Größe, Seitenverhältnis)
-        # - Formen (Position, Typ, Linien, Farben, Transparenz)
-        # - Redactions (Position, Größe)
-        # - Meta-Daten (aktuelle Seite)
-        #
-        # WICHTIG:
-        # - Die Daten werden in self._saved_overlays gespeichert
-        # - Diese Variable bleibt erhalten, bis sie explizit gelöscht wird
-        # - Sie wird NUR beim Speichern gelöscht (nicht beim Umschalten!)
+        # WARUM RELATIVE POSITION?
+        # - Die Seite kann nach dem Neuladen eine andere Größe haben
+        # - Durch relative Position (0..1) bleibt die Position erhalten
+        # - Unabhängig von Zoom oder Seitenformat
         # ============================================================
 
-        print("\n--- SCHRITT 1: Overlay-Daten sichern ---")
+        print("\n--- SCHRITT 1: Aktuelle Position speichern ---")
+
+        # Aktuelle Seite merken
+        saved_page = self.current_page
+
+        # Viewport-Mitte in Scene-Koordinaten berechnen
+        viewport_rect = self.graphics_view.viewport().rect()
+        viewport_center = self.graphics_view.mapToScene(viewport_rect.center())
+
+        print(f"   - Seite: {saved_page + 1}")
+        print(f"   - Viewport-Mitte: ({viewport_center.x():.1f}, {viewport_center.y():.1f})")
+
+        # Prüfen ob die Viewport-Mitte auf einer Seite liegt
+        target_page = saved_page
+        relative_x = 0.5  # Default: Mitte
+        relative_y = 0.5  # Default: Mitte
+
+        if saved_page < len(self.page_items):
+            page_item = self.page_items[saved_page]
+            page_rect = page_item.boundingRect()
+            page_pos = page_item.scenePos()
+
+            # Relative Position auf der Seite berechnen (0..1)
+            relative_x = (viewport_center.x() - page_pos.x()) / page_rect.width()
+            relative_y = (viewport_center.y() - page_pos.y()) / page_rect.height()
+
+            # Auf gültigen Bereich begrenzen (0..1)
+            relative_x = max(0.0, min(1.0, relative_x))
+            relative_y = max(0.0, min(1.0, relative_y))
+
+            print(f"   - Relative Position: X={relative_x:.2f}, Y={relative_y:.2f}")
+        else:
+            print("   - ⚠️ Keine Seite gefunden - verwende Standardposition")
+
+        # Position in einem Dictionary speichern
+        scroll_position = {
+            'page': saved_page,
+            'relative_x': relative_x,
+            'relative_y': relative_y,
+            'scene_x': viewport_center.x(),
+            'scene_y': viewport_center.y()
+        }
+
+        # ============================================================
+        # SCHRITT 2: OVERLAY-DATEN SICHERN
+        # ============================================================
+
+        print("\n--- SCHRITT 2: Overlay-Daten sichern ---")
         self._save_overlay_data()
 
         if self._saved_overlays:
+            # Position in die Overlay-Daten einbetten
+            # Wir fügen ein spezielles 'scroll' Element hinzu
+            scroll_meta = {
+                'type': 'scroll',
+                'page': scroll_position['page'],
+                'relative_x': scroll_position['relative_x'],
+                'relative_y': scroll_position['relative_y']
+            }
+
+            # Das scroll-Meta als erstes Element einfügen (nach dem normalen meta)
+            # Wir müssen es am Anfang einfügen, damit es beim Wiederherstellen zuerst verarbeitet wird
+            if self._saved_overlays and self._saved_overlays[0].get('type') == 'meta':
+                # Füge scroll nach meta ein
+                self._saved_overlays.insert(1, scroll_meta)
+            else:
+                # Fallback: am Anfang einfügen
+                self._saved_overlays.insert(0, scroll_meta)
+
             print(f"✅ {len(self._saved_overlays)} Overlay-Elemente gesichert")
-            print(f"   - Meta: 1 Element (aktuelle Seite)")
-            print(f"   - Texte/Kreuze: {sum(1 for d in self._saved_overlays if d.get('type') in ['text', 'cross'])}")
-            print(f"   - Signaturen: {sum(1 for d in self._saved_overlays if d.get('type') == 'signature')}")
-            print(f"   - Bilder: {sum(1 for d in self._saved_overlays if d.get('type') == 'image')}")
-            print(f"   - Formen: {sum(1 for d in self._saved_overlays if d.get('type') == 'form')}")
-            print(f"   - Redactions: {sum(1 for d in self._saved_overlays if d.get('type') == 'redaction')}")
+            print(f"   - Scroll-Position: Seite {scroll_position['page'] + 1}, "
+                f"X={scroll_position['relative_x']:.2f}, Y={scroll_position['relative_y']:.2f}")
         else:
-            print("⚠️ Keine Overlay-Daten gesichert (keine Elemente vorhanden)")
+            print("⚠️ Keine Overlay-Daten gesichert (nur Position wird gespeichert)")
+            # Auch wenn keine Overlays vorhanden sind, speichern wir die Position
+            self._saved_overlays = [
+                {'type': 'meta', 'current_page': saved_page},
+                scroll_meta
+            ]
 
         # ============================================================
-        # SCHRITT 2: ALLE ITEMS AUS DER SZENE ENTFERNEN
-        # ============================================================
-        #
-        # WARUM?
-        # - Die Qt-Objekte sind an die alte PDF-Seite gebunden
-        # - Beim Neuladen würden sie zu "wrapped C/C++ object has been deleted" Fehlern führen
-        # - Sie müssen aus der Szene entfernt werden, bevor die PDF neu geladen wird
-        #
-        # WAS PASSIERT MIT DEN LISTEN?
-        # - Die Listen (all_text_items, etc.) bleiben ERHALTEN!
-        # - NUR die grafische Darstellung wird entfernt
-        # - Die Daten in den Listen werden für das nächste _save_overlay_data() benötigt
-        #
-        # WICHTIG:
-        # - Die Modi (text_mode, etc.) werden NICHT zurückgesetzt!
-        # - Die aktuellen Items (current_text_item, etc.) bleiben erhalten!
-        # - Nur die Szene wird bereinigt, nicht die Datenstruktur!
+        # SCHRITT 3: ALLE ITEMS AUS DER SZENE ENTFERNEN
         # ============================================================
 
-        print("\n--- SCHRITT 2: Items aus der Szene entfernen ---")
-        print("   (Listen bleiben erhalten für nächste Sicherung)")
+        print("\n--- SCHRITT 3: Items aus der Szene entfernen ---")
         self._clear_items_from_scene_only()
 
         # ============================================================
-        # SCHRITT 3: DARK MODE UMSCHALTEN
-        # ============================================================
-        #
-        # WARUM?
-        # - Der Dark Mode beeinflusst die Darstellung der PDF
-        # - Die Farben der Overlays werden beim Wiederherstellen angepasst
-        # - Der Button-Text und Menüpunkt werden aktualisiert
-        #
-        # WAS PASSIERT?
-        # - self.dark_mode wird von True auf False oder von False auf True gesetzt
-        # - Die Sichtbarkeit der Dark-Mode-spezifischen Menüs wird angepasst
-        # - Das Threshold-Menü (Graustufen) wird bei Smart-Modus eingeblendet
+        # SCHRITT 4: DARK MODE UMSCHALTEN
         # ============================================================
 
-        print("\n--- SCHRITT 3: Dark Mode umschalten ---")
+        print("\n--- SCHRITT 4: Dark Mode umschalten ---")
         self.dark_mode = not self.dark_mode
         print(f"✅ Dark Mode neu: {'AKTIV' if self.dark_mode else 'INAKTIV'}")
 
         # Sichtbarkeit der Dark-Mode-spezifischen Menüs anpassen
         if hasattr(self, 'invert_mode_menu'):
             self.invert_mode_menu.menuAction().setVisible(self.dark_mode)
-            print(f"   - Invertierungs-Menü: {'sichtbar' if self.dark_mode else 'versteckt'}")
 
         if self.dark_mode:
             if hasattr(self, 'threshold_menu'):
-                # Nur bei Smart-Modus sichtbar
                 is_smart = (self.invert_mode == 'smart')
                 self.threshold_menu.menuAction().setVisible(is_smart)
-                print(f"   - Threshold-Menü: {'sichtbar' if is_smart else 'versteckt'}")
         else:
             if hasattr(self, 'threshold_menu'):
                 self.threshold_menu.menuAction().setVisible(False)
-                print(f"   - Threshold-Menü: versteckt (Light Mode)")
 
         # ============================================================
-        # SCHRITT 4: PDF NEU LADEN
-        # ============================================================
-        #
-        # WARUM?
-        # - Die PDF muss mit dem neuen Dark Mode-Status neu gerendert werden
-        # - Die Overlay-Daten bleiben in self._saved_overlays erhalten
-        # - Der Zoom-Modus bleibt erhalten
-        #
-        # WAS PASSIERT?
-        # - Die PDF wird mit dem neuen Dark Mode-Status geladen
-        # - Die Seiten werden neu gerendert
-        # - Die Szene wird mit den neuen Seiten gefüllt
-        # - Der Zoom-Modus wird auf den vorherigen Wert gesetzt
+        # SCHRITT 5: PDF NEU LADEN
         # ============================================================
 
-        print("\n--- SCHRITT 4: PDF neu laden ---")
+        print("\n--- SCHRITT 5: PDF neu laden ---")
         current_mode = self.zoom_mode
-        print(f"   - Zoom-Modus: {current_mode}")
 
         if hasattr(self, 'pdf_path') and self.pdf_path:
-            print(f"   - PDF-Pfad: {self.pdf_path}")
             self.load_pdf()
             self.set_zoom_mode(current_mode)
             print("✅ PDF erfolgreich neu geladen")
@@ -50021,55 +51588,49 @@ class PDFViewer(QMainWindow):
             print("⚠️ Keine PDF geladen - Überspringe Neuladen")
 
         # ============================================================
-        # SCHRITT 5: OVERLAYS WIEDERHERSTELLEN
-        # ============================================================
-        #
-        # WARUM?
-        # - Die Overlay-Elemente müssen nach dem Neuladen wieder angezeigt werden
-        # - Die Daten sind in self._saved_overlays gespeichert
-        # - Die Elemente werden mit den NEUEN Dark Mode-Farben erstellt
-        #
-        # WAS PASSIERT?
-        # - Aus den gespeicherten Daten werden neue Qt-Objekte erstellt
-        # - Die Objekte werden in die Szene eingefügt
-        # - Die Listen werden mit den neuen Objekten gefüllt
-        # - Die Modi werden aktiviert
-        # - Die Shortcuts werden eingerichtet
-        #
-        # WICHTIG:
-        # - Verzögerung (200ms) für Windows Bundle-Kompatibilität
-        # - self._saved_overlays wird NICHT gelöscht!
-        # - Die Daten bleiben für den NÄCHSTEN Umschaltvorgang erhalten
+        # SCHRITT 6: OVERLAYS WIEDERHERSTELLEN
         # ============================================================
 
-        print("\n--- SCHRITT 5: Overlays wiederherstellen ---")
+        print("\n--- SCHRITT 6: Overlays wiederherstellen ---")
 
         if self._saved_overlays is not None and len(self._saved_overlays) > 1:
-            print(f"   - {len(self._saved_overlays)} Overlay-Elemente werden wiederhergestellt")
-            print("   - Verzögerung: 200ms (für Windows Bundle-Kompatibilität)")
-
-            # Wichtig: Verzögerung, damit die Szene vollständig geladen ist
-            # Besonders wichtig für Windows Bundle, wo die Szene langsamer lädt
             QTimer.singleShot(200, self._restore_overlay_items)
             print("✅ Overlay-Wiederherstellung gestartet")
         else:
             if self._saved_overlays is None:
                 print("⚠️ Keine Overlay-Daten vorhanden")
             else:
-                print("⚠️ Nur Meta-Daten vorhanden (keine Elemente zum Wiederherstellen)")
+                print("⚠️ Nur Meta-Daten vorhanden")
             self._saved_overlays = None
 
         # ============================================================
-        # SCHRITT 6: UI AKTUALISIEREN
+        # SCHRITT 7: ZUR GESPEICHERTEN POSITION SPRINGEN
         # ============================================================
         #
-        # WARUM?
-        # - Der Button-Text muss aktualisiert werden (Dark/Light)
-        # - Der Menüpunkt muss aktualisiert werden
-        # - Die Einstellungen müssen gespeichert werden
+        # WARUM VERZÖGERUNG?
+        # - Die Szene muss erst vollständig geladen sein
+        # - Die Overlays müssen wiederhergestellt sein
+        # - Besonders wichtig für Windows Bundle
+        #
+        # WAS PASSIERT?
+        # - Es wird zur gespeicherten Seite gesprungen
+        # - Die Viewport-Mitte wird auf die gespeicherte Position gesetzt
+        # - Die Position wird aus den gespeicherten relativen Koordinaten berechnet
         # ============================================================
 
-        print("\n--- SCHRITT 6: UI aktualisieren ---")
+        print("\n--- SCHRITT 7: Zur gespeicherten Position springen ---")
+
+        # Die Position wird nach der Wiederherstellung der Overlays gesetzt
+        # Dazu verwenden wir einen weiteren Timer, der nach der Overlay-Wiederherstellung läuft
+        QTimer.singleShot(400, lambda: self._restore_scroll_position(scroll_position))
+        print(f"✅ Springe zu Seite {scroll_position['page'] + 1}, "
+            f"Position X={scroll_position['relative_x']:.2f}, Y={scroll_position['relative_y']:.2f}")
+
+        # ============================================================
+        # SCHRITT 8: UI AKTUALISIEREN
+        # ============================================================
+
+        print("\n--- SCHRITT 8: UI aktualisieren ---")
         self.update_mode_action_text()
         self.save_app_settings()
         print("✅ UI aktualisiert")
@@ -50082,15 +51643,81 @@ class PDFViewer(QMainWindow):
         print("\n=== TOGGLE DARK MODE ABGESCHLOSSEN ===")
         print(f"📊 Status nach Umschaltung:")
         print(f"   - Dark Mode: {'AKTIV' if self.dark_mode else 'INAKTIV'}")
+        print(f"   - Aktuelle Seite: {self.current_page + 1}")
         print(f"   - Text-Modus: {self.text_mode}")
-        print(f"   - Signaturen: {len(self.all_signature_items)}")
-        print(f"   - Bilder: {len(self.all_image_items)}")
-        print(f"   - Formen: {len(self.all_form_items)}")
-        print(f"   - Redactions: {len(self.all_redaction_items)}")
         print(f"   - Overlay-Daten erhalten: {self._saved_overlays is not None}")
-        if self._saved_overlays:
-            print(f"   - Overlay-Elemente: {len(self._saved_overlays)}")
         print("=" * 50 + "\n")
+
+    def _restore_scroll_position(self, scroll_position):
+        """
+        Stellt die gespeicherte Scroll-Position wieder her.
+
+        Diese Methode wird NACH der Overlay-Wiederherstellung aufgerufen,
+        um sicherzustellen, dass die Szene vollständig geladen ist.
+
+        PARAMETER:
+        - scroll_position: Dictionary mit den gespeicherten Positionsdaten
+            {
+                'page': int,           # Seitenindex (0-basiert)
+                'relative_x': float,   # Relative X-Position (0..1)
+                'relative_y': float,   # Relative Y-Position (0..1)
+                'scene_x': float,      # Absolute Scene-X-Position
+                'scene_y': float       # Absolute Scene-Y-Position
+            }
+
+        FUNKTIONSWEISE:
+        1. Prüft ob die Seite existiert
+        2. Berechnet die Zielposition in Scene-Koordinaten
+        3. Scrollt zur Zielposition
+        4. Aktualisiert den Seiten-Spin-Box-Wert
+
+        RÜCKGABE:
+        - True bei Erfolg, False bei Fehler
+        """
+
+        print("\n=== RESTORE SCROLL POSITION ===")
+
+        if not scroll_position:
+            print("⚠️ Keine Scroll-Position zum Wiederherstellen")
+            return False
+
+        page = scroll_position.get('page', 0)
+        relative_x = scroll_position.get('relative_x', 0.5)
+        relative_y = scroll_position.get('relative_y', 0.5)
+
+        print(f"   - Ziel-Seite: {page + 1}")
+        print(f"   - Relative Position: X={relative_x:.2f}, Y={relative_y:.2f}")
+
+        # ===== 1. Prüfen ob Seite existiert =====
+        if page >= len(self.page_items):
+            print(f"⚠️ Seite {page + 1} existiert nicht (nur {len(self.page_items)} Seiten)")
+            return False
+
+        # ===== 2. Zielposition in Scene-Koordinaten berechnen =====
+        page_item = self.page_items[page]
+        page_rect = page_item.boundingRect()
+        page_pos = page_item.scenePos()
+
+        target_x = page_pos.x() + (page_rect.width() * relative_x)
+        target_y = page_pos.y() + (page_rect.height() * relative_y)
+
+        print(f"   - Ziel-Scene-Position: ({target_x:.1f}, {target_y:.1f})")
+
+        # ===== 3. Zur Zielposition scrollen =====
+        # Verwende centerOn für sanftes Scrollen
+        self.graphics_view.centerOn(target_x, target_y)
+
+        # ===== 4. Seiten-Spin-Box aktualisieren =====
+        with QSignalBlocker(self.page_spin):
+            self.page_spin.setValue(page + 1)
+
+        # ===== 5. Force Update =====
+        self.graphics_view.viewport().update()
+        QApplication.processEvents()
+
+        print(f"✅ Erfolgreich zu Seite {page + 1} gesprungen")
+        print("=== RESTORE SCROLL POSITION ABGESCHLOSSEN ===\n")
+        return True
 
     def apply_styles(self):
 
