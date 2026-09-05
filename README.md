@@ -8,7 +8,8 @@ PDFDarkView
 > **https://github.com/BinhDiez/PDFDarkView**
 >
 > All future updates, bug fixes, and releases will only be published there.
->
+
+
 > > [!IMPORTANT]
 > **Dieses Repository wird nicht mehr gepflegt.**
 >
@@ -16,7 +17,8 @@ PDFDarkView
 > **https://github.com/BinhDiez/PDFDarkView**
 >
 > Alle zukünftigen Updates, Fehlerbehebungen und Releases werden ausschließlich dort veröffentlicht.
->
+
+
 > > [!IMPORTANT]
 > **Kho lưu trữ này không còn được duy trì.**
 >
@@ -26,231 +28,308 @@ PDFDarkView
 > Tất cả các bản cập nhật, sửa lỗi và bản phát hành trong tương lai sẽ chỉ được phát hành tại đó.
 > 
 
-<img width="382" height="375" alt="PDFDarkView" src="https://github.com/user-attachments/assets/bc440bc9-2def-404b-ad51-142cae26dc19" />
 
+## PDFDarkView - PDF Bearbeitung leicht gemacht (Open Source)
 
-PDF viewer and editor with OCR, accessibility features, multilingual support, and advanced PDF processing tools.
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/bc440bc9-2def-404b-ad51-142cae26dc19" alt="PDFDarkView Logo" width="260">
+</p>
 
-PDFDarkView combines PDF viewing, editing, OCR recognition, document conversion, accessibility tools, and PDF optimization in a single application. It is designed for both everyday PDF workflows and users with visual impairments.
+<p align="center">
 
-⸻
 
-Features
+**PDFDarkView** ist ein kostenloser Open-Source-PDF-Viewer und PDF-Editor für **macOS und Windows** mit OCR, Barrierefreiheitsfunktionen, Text-to-Speech, Mehrsprachigkeit und umfangreichen Werkzeugen zur PDF-Bearbeitung.
 
-Core Features
+Die Anwendung vereint PDF-Anzeige, Bearbeitung, OCR-Texterkennung, Dokumentkonvertierung, Barrierefreiheit und PDF-Optimierung in einer einzigen Software – sowohl für den täglichen Einsatz als auch für Nutzer mit Sehbeeinträchtigungen.
 
-Feature	Description
-PDF Viewing	Open and navigate PDF documents efficiently
-PDF Editing	Insert and modify content directly in PDFs
-OCR Support	Text recognition powered by Tesseract OCR
-Full-Text Search	Search document content quickly
-Bookmarks	Create, manage, and navigate bookmarks
-Text Panel	View and work with extracted document text
-Text-to-Speech	Read documents aloud
-Dark & Light Mode	Comfortable viewing in any environment
-Multilingual UI	Available in 64 languages
-Accessibility	Optimized for visually impaired users
+---
 
-⸻
+# Funktionen
 
-Editing Tools
+## Kernfunktionen
 
-Insert Elements
+| Funktion | Beschreibung |
+|----------|--------------|
+| PDF-Anzeige | PDF-Dokumente öffnen und komfortabel durchsuchen |
+| PDF-Bearbeitung | Inhalte direkt in PDFs einfügen und bearbeiten |
+| OCR-Unterstützung | Texterkennung mit Tesseract OCR |
+| Volltextsuche | Dokumentinhalte schnell durchsuchen |
+| Lesezeichen | Erstellen, verwalten und navigieren |
+| Textfenster | Extrahierten Dokumenttext anzeigen |
+| Text-to-Speech | Dokumente vorlesen lassen |
+| Dark Mode & Light Mode | Angenehme Darstellung in jeder Umgebung |
+| Mehrsprachige Oberfläche | Verfügbar in 64 Sprachen |
+| Barrierefreiheit | Optimiert für sehbehinderte und blinde Nutzer |
 
-Tool
+---
 
-Insert Text
+## Bearbeitungswerkzeuge
 
-Insert Image
+### Elemente einfügen
 
-Insert Signature (password protected)
+- Text
+- Bild
+- Signatur (passwortgeschützt)
+- Häkchen
+- Rechteck
+- Ellipse
+- Linie
+- Pfeil
+- Seitenzahlen
+- Text-Wasserzeichen
+- Bild-Wasserzeichen
 
-Insert Check Mark
+### Redaktion (Schwärzen)
 
-Insert Rectangle
+- Schwarze Schwärzung
+- Weiße Schwärzung
 
-Insert Ellipse
+---
 
-Insert Line
+## Seitenverwaltung
 
-Insert Arrow
+- Seite drehen
+- Alle Seiten drehen
+- Seitenausrichtung normalisieren
+- Alle Seiten normalisieren
+- Seiten löschen
+- Seiten extrahieren
+- Seiten einfügen
+- Seiten verschieben
+- Seitengröße ändern
+- N-Up (mehrere Seiten pro Blatt)
 
-Insert Page Numbers
+---
 
-Insert Text Watermark
+## PDF-Verarbeitung
 
-Insert Image Watermark
+- PDFs zusammenführen
+- PDFs überlagern
+- PDFs zuschneiden
+- PDFs abflachen (Flatten)
+- PDFs optimieren
+- In PDF/A konvertieren
+- Dokumente schützen
 
-Redaction
+---
 
-* Black redaction
-* White redaction
+## Export & Konvertierung
 
-⸻
+- Apple Pages
+- DOCX
+- TXT
+- Seiten als Bilder exportieren
+- Eingebettete Bilder extrahieren
 
-Page Operations
+---
 
-Action
+## Metadaten
 
-Rotate Page
+- Metadaten anzeigen
+- Metadaten bearbeiten
 
-Rotate All Pages
+---
 
-Normalize Page Orientation
+## Einstellungen
 
-Normalize All Pages
+### Allgemein
 
-Delete Pages
+- OCR-Konfiguration
+- Text-to-Speech-Einstellungen
+- Passwortverwaltung
+- Signatureinstellungen
+- Backup-Einstellungen
+- Dateinamenformatierung
 
-Extract Pages
+### Darstellung
 
-Insert Pages
+- Dark Mode
+- Farbumkehr
+- Einstellbarer Graustufen-Schwellwert
 
-Move Pages
+### Konfiguration
 
-Resize Pages
+- Exporteinstellungen
+- Importeinstellungen
+- Anwendungssprache ändern
+- 64 verfügbare Sprachen
 
-N-Up (Multiple Pages per Sheet)
+---
 
-⸻
+## Barrierefreiheit
 
-PDF Processing
+PDFDarkView enthält zahlreiche Funktionen zur Verbesserung der Zugänglichkeit.
 
-Function
+- Text-to-Speech
+- Dark Mode
+- Farbumkehr
+- Einstellbarer Graustufen-Schwellwert
+- Große Zoomstufen
+- Vollständige Tastaturbedienung
+- Mehrsprachige Benutzeroberfläche
 
-Merge PDFs
+---
 
-Overlay PDFs
+# Versionsverlauf
 
-Crop PDFs
+## Version 2.4.5
 
-Flatten PDFs
+### Verbesserungen
 
-Optimize PDFs
+- Weitere Zeitoptimierung durch Lazy Import`s
 
-Convert to PDF/A
+### Fehlerbehebungen
 
-Protect Documents
+- Diverse Bugfixes
 
-⸻
+---
 
-Export & Conversion
+## Version 2.4.4
 
-Export Format
+### Neu
 
-Apple Pages
+- Dateisuffixe mit optionalem Benutzernamen
 
-DOCX
+### Verbesserungen
 
-TXT
+- Weitere Zeitmessungen zur Performanceanalyse
 
-Export Pages as Images
+### Fehlerbehebungen
 
-Extract Embedded Images
+- Diverse Bugfixes
 
-⸻
+---
 
-Metadata
+## Version 2.4.3
 
-* View metadata
-* Edit metadata
+### Neu
 
-⸻
+- Neue Sprache: Esperanto
 
-Settings
+### Verbesserungen
 
-General
+- Drucken unter Windows nutzt jetzt eine dafür geeignete Anwendung (Adobe Acrobat, Edge, Firefox, Foxit ...)
 
-* OCR configuration
-* Text-to-Speech settings
-* Password management
-* Signature settings
-* Backup settings
-* Filename formatting
+---
 
-Appearance
+## Version 2.4.2
 
-* Dark Mode
-* Color Inversion
-* Grayscale Threshold Adjustment
+### Startzeit deutlich reduziert
 
-Configuration
+Insbesondere im Netzwerk- und Citrix-Betrieb wurde die Startzeit erheblich verkürzt.
 
-* Export Settings
-* Import Settings
-* Change Application Language
-* 64 Languages Available
+**Optimierungen**
 
-⸻
+- `shutil.which()` wird zuerst verwendet (kein Prozessstart, schneller Systemaufruf)
+- Timeouts für `subprocess.run()` verhindern Blockaden von über zwei Sekunden pro Befehl
+- Direkte Pfadlisten ersetzen aufwändige `subprocess`-Aufrufe
+- Bundle-Pfade werden vor der Systemsuche bevorzugt
+- Im Bundle-Modus entfällt die aufwändige Systemsuche vollständig
+- Zeitmessungen werden im Log als **TIMING** protokolliert
 
-Accessibility
+---
 
-PDFDarkView includes several features designed to improve accessibility:
+## Version 2.4.1
 
-* Text-to-Speech support
-* Dark Mode
-* Color inversion
-* Adjustable grayscale threshold
-* Large zoom options
-* Full keyboard navigation support
-* Multilingual interface
-  
-⸻
+### Neu
 
-New Features in version 2.2.0
-• OCR improvements
-• Better Dark Mode
-• Check for Updates on start
-• System-Language detection on first start and download of translations from repository (64 languages)
-• Bug fixes
+- Gerade und ungerade Seiten löschen
 
-⸻
+### Verbesserungen
 
-🇩🇪 Deutsche Beschreibung
+- Dateisuffixe werden nun immer ersetzt
+- Optionales Beibehalten wurde entfernt, um überlange Dateinamen zu verhindern
+- Standard-OCR-Sprache entspricht automatisch der Sprache der Benutzeroberfläche
 
-PDFDarkView ist ein kostenloser Open-Source-PDF-Viewer und PDF-Editor für Windows und macOS. Die Software ermöglicht das Anzeigen, Bearbeiten, Optimieren und Konvertieren von PDF-Dateien sowie eine leistungsstarke OCR-Texterkennung mit Tesseract OCR.
+---
 
-Besonders geeignet ist PDFDarkView für Anwender, die PDF-Dokumente bearbeiten, Seiten zusammenführen, Seiten extrahieren, Wasserzeichen einfügen, Dokumente schwärzen (Redaktion), PDF-Dateien optimieren oder in PDF/A umwandeln möchten.
+## Version 2.3.1
 
-Funktionen
+### Fehlerbehebungen
 
-* PDF-Dateien öffnen und anzeigen
-* PDF bearbeiten
-* OCR-Texterkennung (Texterkennung aus gescannten Dokumenten)
-* Durchsuchbare PDF erstellen
-* Volltextsuche
-* Text-to-Speech (PDF vorlesen lassen)
-* Dunkelmodus (Dark Mode)
-* Heller Modus
-* Farbumkehr
-* Barrierefreie PDF-Nutzung
-* Unterstützung für sehbehinderte und blinde Nutzer
-* Mehrsprachige Benutzeroberfläche (64 Sprachen)
-* PDF zusammenführen
-* PDF überlagern
-* PDF zuschneiden
-* PDF optimieren
-* PDF/A erstellen
-* Metadaten anzeigen und bearbeiten
-* Seiten drehen, verschieben, löschen und extrahieren
-* Seitenzahlen einfügen
-* Bilder, Text und Signaturen einfügen
-* Wasserzeichen einfügen
-* Dokumente schwärzen (Redaktion)
-* PDF nach DOCX exportieren
-* PDF nach TXT exportieren
-* Bilder aus PDF extrahieren
-* PDF-Seiten als Bilder exportieren
+- Verbesserter PDF-Start per Doppelklick
+- Optimiertes Logging
 
-Suchbegriffe
+---
 
-PDF Viewer, PDF Betrachter, PDF Reader, PDF Editor, PDF bearbeiten, PDF bearbeiten kostenlos, Open Source PDF, kostenlose PDF-Software, OCR, Texterkennung, Dokumentenerkennung, gescannte Dokumente erkennen, PDF durchsuchbar machen, PDF zusammenführen, PDF optimieren, PDF komprimieren, PDF in PDF/A umwandeln, PDF zuschneiden, PDF drehen, Seiten extrahieren, Seiten löschen, Seiten verschieben, Ankreuzen, Bilder einfügen, Formen einfügen, Text einfügen, Unterschrift einfügen, Wasserzeichen einfügen, PDF schwärzen, Dokumente anonymisieren, PDF Signatur, PDf unterschreiben, Metadaten bearbeiten, PDF vorlesen, Text-to-Speech, Barrierefreiheit, Sehbehinderung, Screenreader, Sprachausgabe, Dark Mode, Light Mode, Dunkelmodus, PDF Software Windows, PDF Software macOS, Tesseract OCR, GUI Übersetzung, mehrsprachige Benutzeroberfläche.
+## Version 2.2.0
 
-⸻
+### Neu
 
-Licenses
+- Verbesserte OCR-Erkennung
+- Optimierter Dark Mode
+- Updateprüfung beim Programmstart
+- Automatische Erkennung der Systemsprache beim ersten Start
+- Automatischer Download der Übersetzungen aus dem Repository
+- Unterstützung für 64 Sprachen
 
-Third-Party Licenses
+### Fehlerbehebungen
+
+- Diverse Bugfixes
+
+---
+
+# Unterstützte Plattformen
+
+| Plattform | Unterstützung |
+|-----------|---------------|
+| macOS (Intel) | ✅ |
+| macOS (Apple Silicon) | ✅ |
+| Windows (64-Bit) | ✅ |
+
+
+---
+
+<details>
+<summary>📸 Screenshots anzeigen</summary>
+
+### PDF Bearbeiten / Einfügen (Dark Mode / Light Mode)
+
+![](docs/screenshots/ScreenShot11.png)
+
+![](docs/screenshots/ScreenShot12.png)
+
+### Über PDFDarkView
+
+![](docs/screenshots/ScreenShot1.png)
+
+### OCR Einstellungen
+
+![](docs/screenshots/ScreenShot9.png)
+
+### OCR Textfenster
+
+![](docs/screenshots/ScreenShot3.png)
+
+### Passwortverwaltung
+
+![](docs/screenshots/ScreenShot8.png)
+
+</details>
+
+---
+
+# Suchbegriffe
+
+PDF Viewer, PDF Betrachter, PDF Reader, PDF Editor, PDF bearbeiten, PDF bearbeiten kostenlos, Open Source PDF, kostenlose PDF-Software, OCR, Texterkennung, Dokumentenerkennung, gescannte Dokumente erkennen, PDF durchsuchbar machen, PDF zusammenführen, PDF optimieren, PDF komprimieren, PDF in PDF/A umwandeln, PDF zuschneiden, PDF drehen, Seiten extrahieren, Seiten löschen, Seiten verschieben, Ankreuzen, Bilder einfügen, Formen einfügen, Text einfügen, Unterschrift einfügen, Wasserzeichen einfügen, PDF schwärzen, Dokumente anonymisieren, PDF Signatur, PDF unterschreiben, Metadaten bearbeiten, PDF vorlesen, Text-to-Speech, Barrierefreiheit, Sehbehinderung, Screenreader, Sprachausgabe, Dark Mode, Light Mode, Dunkelmodus, PDF-Software Windows, PDF-Software macOS, Tesseract OCR, GUI-Übersetzung, mehrsprachige Benutzeroberfläche.
+
+---
+
+# Lizenzen / Licenses
+
+## Deutsch
+
+PDFDarkView wird unter der MIT-Lizenz veröffentlicht.
+
+Dieses Projekt verwendet verschiedene Open-Source-Bibliotheken und Komponenten von Drittanbietern. Diese Abhängigkeiten unterliegen weiterhin ihren jeweiligen Lizenzen und Copyright-Hinweisen.
+
+Die MIT-Lizenz von PDFDarkView gilt ausschließlich für den ursprünglichen Quellcode dieses Projekts und ersetzt oder verändert nicht die Lizenzbedingungen der verwendeten Drittanbieter-Software.
+
+Details zu den verwendeten Komponenten und deren jeweiligen Lizenzen befinden sich in der Datei `THIRD_PARTY_LICENSES.md`.
+
+---
+
+## English
 
 PDFDarkView is released under the MIT License.
 
@@ -258,31 +337,46 @@ This project uses a number of third-party open-source libraries and components. 
 
 The MIT License of PDFDarkView applies only to the original source code of this project and does not replace or modify the license terms of any third-party software.
 
-For details regarding third-party components and their respective licenses, please refer to the THIRD_PARTY_LICENSES.md file.
+For details regarding third-party components and their respective licenses, please refer to the `THIRD_PARTY_LICENSES.md` file.
 
-⸻
+---
 
-Supported Platforms
+<details>
+<summary>🖥️ Download-Info</summary>
 
-Platform
+| Suffix | Betriebssystem |
+|--------|-----------------|
+| `_macOS_as` | Alle Macs mit Apple Silicon (M1, M2, M3, M4 …) |
+| `_macOS_intel` | Alle Macs mit Intel-Prozessor |
+| `_win` | Windows x64 (AMD64/x86-64) – Windows 7, 8.1, 10 und 11 |
 
-Windows (64-bit)
+> **Hinweis:** Windows on ARM wird derzeit nicht unterstützt.
+</details>
 
-macOS (Intel)
+<details>
+<summary>🖥️ macOS-Sicherheitshinweis</summary>
 
-macOS (Apple Silicon)
+# macOS-Sicherheitshinweis
 
 
-macOS Security Notice
+PDFDarkView ist derzeit nicht mit einem Apple-Developer-Zertifikat signiert.
 
-PDFDarkView is currently not signed with an Apple Developer Certificate.
+Beim ersten Start kann macOS Gatekeeper die Ausführung blockieren.
 
-When launching the application for the first time, macOS Gatekeeper may block execution.
+So lässt sich die Anwendung dennoch öffnen:
 
-To open the application:
+1. Versuche, PDFDarkView.app einmal zu öffnen.
+2. Die Warnung erscheint – klicke auf **Fertig** oder **Abbrechen**. (Nicht in den Papierkorb legen)
+3. Öffne **Systemeinstellungen** → **Datenschutz & Sicherheit**.
+4. Scrolle nach unten. 
+   Dort sollte eine Meldung erscheinen wie:
+   **„PDFDarkView.app wurde blockiert …“**
+6. Bestätige den Dialog mit **Öffnen**.
+</details>
 
-1. Locate PDFDarkView in Finder.
-2. Right-click (Control-click) the application.
-3. Select Open.
-4. Confirm by clicking Open again.
 
+<details>
+<summary>🔑 Passwort für die ZIP Dateien:</summary>
+
+BinhDiez
+</details>
