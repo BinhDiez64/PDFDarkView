@@ -3,6 +3,7 @@
 **Dieses Repository wird nicht mehr gepflegt.**
 
 Die Entwicklung wurde in das neue offizielle Repository verschoben:
+
 **https://github.com/BinhDiez/PDFDarkView**
 
 Alle zukünftigen Updates, Fehlerbehebungen und Releases werden ausschließlich dort veröffentlicht.
@@ -22,6 +23,7 @@ All future updates, bug fixes, and releases will only be published there.
 **Kho lưu trữ này không còn được duy trì.**
 
 Quá trình phát triển đã được chuyển sang kho lưu trữ chính thức mới:
+
 **https://github.com/BinhDiez/PDFDarkView**
 
 Tất cả các bản cập nhật, sửa lỗi và bản phát hành trong tương lai sẽ chỉ được phát hành tại đó.
