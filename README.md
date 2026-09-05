@@ -1,11 +1,12 @@
-PDFDarkView
+## PDFDarkView
 
 
 > [!IMPORTANT]
 > **This repository is no longer maintained.**
 >
 > Development has moved to the new official repository:
-> **https://github.com/BinhDiez/PDFDarkView**
+> 
+## > **https://github.com/BinhDiez/PDFDarkView**
 >
 > All future updates, bug fixes, and releases will only be published there.
 
